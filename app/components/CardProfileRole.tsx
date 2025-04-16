@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUserRoles, updateUserRole, getUserName, updateUserName } from "@/lib/profileApi";
+import { getUserRoles,getUserName, updateUserName } from "@/lib/profileApi";
 import TrainerRegisterForm from "@/app/components/TrainerRegisterForm";
 import GymManagerRegisterForm from "@/app/components/GymManagerRegisterForm";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface CardProfileRoleProps {
   userId: string;
@@ -18,6 +19,14 @@ const ROLE_LABELS: Record<string, string> = {
   Trainer: "Eğitmen",
   GymManager: "Salon Yöneticisi",
 };
+
+const DASHBOARD_LINKS: Record<string, { href: string; label: string }> = {
+  Member: { href: "/dashboard/member", label: "Üye Paneli" },
+  Trainer: { href: "/dashboard/trainer", label: "Eğitmen Paneli" },
+  GymManager: { href: "/dashboard/gymmanager", label: "Salon Yöneticisi Paneli" },
+};
+
+
 
 export default function CardProfileRole({ userId }: CardProfileRoleProps) {
   const [roles, setRoles] = useState<string[]>([]);
@@ -46,17 +55,6 @@ export default function CardProfileRole({ userId }: CardProfileRoleProps) {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
-
-  async function handleAddRole(role: 'Trainer' | 'GymManager') {
-    setIsLoading(true);
-    try {
-      await updateUserRole(userId, role, true);
-      const userRoles = await getUserRoles(userId);
-      setRoles(userRoles);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function handleNameSave() {
     setIsLoading(true);
@@ -136,6 +134,20 @@ export default function CardProfileRole({ userId }: CardProfileRoleProps) {
             {ROLE_LABELS[role] || role}
           </span>
         ))}
+      </div>
+      <div className="flex flex-col gap-2 mt-4">
+        {roles.map((role) => {
+          const dash = DASHBOARD_LINKS[role];
+          return dash ? (
+            <Link
+              key={role}
+              href={dash.href}
+              className="block w-full px-4 py-2 rounded bg-primary text-white text-center font-medium hover:bg-blue-700 transition dark:bg-primary dark:hover:bg-blue-800"
+            >
+              {dash.label}
+            </Link>
+          ) : null;
+        })}
       </div>
       <div className="flex gap-2 mt-2">
         {!roles.includes("Trainer") && (

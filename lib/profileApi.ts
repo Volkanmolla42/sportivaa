@@ -46,15 +46,16 @@ export async function addUserToGym({ user_id, gym_id, role, added_by }: { user_i
 }
 
 // Kullanıcının bağlı olduğu salonları listeler
-export async function getUserGyms(userId: string): Promise<{ gym_id: string; gym_name: string }[]> {
+export async function getUserGyms(userId: string): Promise<{ gym_id: string; gym_name: string; gym_city: string }[]> {
   const { data, error } = await supabase
     .from('gym_users')
-    .select('gym_id, gyms(name)')
+    .select('gym_id, gyms(name, city)')
     .eq('user_id', userId);
   if (error) throw error;
   return data?.map((item: any) => ({
     gym_id: item.gym_id,
     gym_name: item.gyms?.name || '',
+    gym_city: item.gyms?.city || '',
   })) || [];
 }
 
