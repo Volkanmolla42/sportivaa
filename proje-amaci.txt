@@ -1,0 +1,323 @@
+Sportiva: Comprehensive Project Plan
+1. Executive Summary
+sportiva is a digital platform designed to bring together gym owners, trainers, and members in a unified ecosystem. The platform allows users to have multiple roles (member, trainer, gym manager) with member being the default role. This solution addresses the digital transformation needs in the fitness industry by streamlining membership management, trainer-member interactions, appointment scheduling, and fitness history tracking.
+Core Value Propositions:
+
+For Members: Single access point to fitness history across gyms, easy appointment booking, current gym information
+For Trainers: Expanded member reach, schedule management, professional profile management
+For Gym Managers: Streamlined member and trainer management, digital record-keeping, operational efficiency
+
+2. Product Vision & Strategy
+Platform Overview
+sportiva will be a web-based application with a focus on user experience and seamless integration of different roles. The system will use role-based access control to manage permissions while allowing users to switch between roles (member, trainer, gym manager) as needed.
+Target Audience
+
+Individual fitness enthusiasts
+Professional and part-time trainers
+Gym owners and managers
+
+Key Differentiators
+
+Multi-role support within a single user account
+Cross-gym visibility of fitness history
+Transparent approval mechanisms for gym-user relationships
+Focus on data privacy and user consent
+
+3. Technical Architecture
+Technology Stack
+
+Frontend: React.js with Next.js framework and TailwindCSS
+Backend: Node.js with Express (API-focused)
+Database: PostgreSQL (via Supabase)
+Authentication: Supabase Auth with JWT
+Hosting: Vercel (Frontend), Supabase (Backend)
+Additional: Redis (for caching), Docker (for deployment)
+
+Database Schema (Core Tables)
+Users
+- UserID (PK)
+- Email
+- PasswordHash
+- Name
+- Surname
+- Phone
+- CreatedAt
+- IsActive
+
+Profiles
+- ProfileID (PK)
+- UserID (FK)
+- ProfileType (Member, Trainer, GymManager)
+- IsActive
+
+MemberProfileDetails
+- UserID (FK)
+- DateOfBirth
+- Gender
+- Phone
+- Weight
+- Height
+- Goals
+
+TrainerProfileDetails
+- UserID (FK)
+- Specialities
+- Certifications
+- Bio
+- ExperienceYears
+
+Gyms
+- GymID (PK)
+- GymName
+- Address
+- Phone
+- Website
+- LogoURL
+- OwnerUserID (FK)
+- CreatedAt
+- IsVerified
+
+GymMemberships
+- MembershipID (PK)
+- UserID (FK)
+- GymID (FK)
+- StartDate
+- EndDate
+- Status (PendingApproval, Active, Inactive, Rejected)
+- RequestedBy
+- ApprovedAt
+
+GymTrainers
+- GymTrainerID (PK)
+- UserID (FK)
+- GymID (FK)
+- Status (PendingApproval, Active, Inactive, Rejected)
+- RequestedBy
+- ApprovedAt
+
+Appointments
+- AppointmentID (PK)
+- MemberUserID (FK)
+- TrainerUserID (FK)
+- GymID (FK)
+- AppointmentDateTime
+- DurationMinutes
+- Status (Requested, Confirmed, Completed, Cancelled, Rejected)
+- Notes
+
+Notifications
+- NotificationID (PK)
+- UserID (recipient)
+- Message
+- Type (Invitation, Reminder, Confirmation)
+- IsRead
+- CreatedAt
+4. Detailed MVP Plan
+The Minimum Viable Product will focus on core functionalities to validate the concept and gather user feedback.
+MVP Core Features
+User Authentication & Profile Management
+
+Registration and login with email/password
+Basic profile creation for all roles
+Role addition/activation mechanism
+
+Gym Management
+
+Gym registration with basic details (name, address, contact)
+Member and trainer invitation workflow
+Basic gym dashboard with member/trainer lists
+
+Member Features
+
+View active gym membership
+View/respond to pending invitations
+Basic profile management
+
+Trainer Features
+
+Trainer profile creation
+View/respond to gym affiliation invitations
+View connected gyms
+
+Approval & Connection System
+
+Gym managers can search for existing users
+Send membership/affiliation invitations
+Notification system for approvals
+
+MVP Exclusions (Post-MVP Features)
+
+Advanced profile fields (detailed member metrics, certifications)
+Appointment scheduling system
+Detailed history records and filtering
+Payment integration
+Rating/review system
+Group class management
+Mobile application
+
+5. Development Roadmap
+Phase 1: Core Infrastructure (Weeks 1-2)
+
+Project setup with Next.js + TailwindCSS
+Supabase connection and configuration
+Authentication system setup
+Basic role-based data model implementation
+Role-based access control setup
+
+Phase 2: Profile & Dashboard Framework (Weeks 3-4)
+
+Role selection and profile type interfaces
+User profile pages for different roles
+Dashboard designs based on user roles
+Navigation and role-switching functionality
+
+Phase 3: Gym Management (Weeks 5-7)
+
+Gym registration form and profile pages
+Member search and invitation system
+Trainer search and invitation system
+Invitation management for users
+
+Phase 4: Beta Testing & UI Refinement (Week 8)
+
+Internal testing with sample users
+UI/UX improvements based on feedback
+Performance optimization
+Bug fixes
+
+Phase 5: MVP Launch (Week 9)
+
+Deployment to production
+Initial user onboarding
+Feedback collection mechanisms
+
+6. Post-MVP Roadmap
+Phase 6: Appointment System (Weeks 10-12)
+
+Calendar integration
+Appointment creation and management
+Scheduling and availability settings for trainers
+Notifications for appointments
+
+Phase 7: Fitness History (Weeks 13-14)
+
+Member metrics tracking
+Gym membership history visualization
+Training session history
+
+Phase 8: Analytics & Reporting (Weeks 15-16)
+
+Gym manager dashboard with metrics
+Member progress analytics
+Trainer performance metrics
+
+Phase 9: Monetization Features (Weeks 17-19)
+
+Payment integration
+Premium features for members
+Subscription management for gyms
+
+Phase 10: Mobile Optimization (Weeks 20-22)
+
+Progressive Web App implementation
+Mobile-specific UI enhancements
+Potential native app development
+
+7. Risk Assessment & Mitigation
+RiskImpactProbabilityMitigation StrategyUser adoption barriersHighMediumFocus on intuitive UX, offer guided onboardingData privacy concernsHighMediumImplement robust permission system, clear consent flowsComplex multi-role managementMediumHighExtensive testing of role transitions, clear UI for current roleCompeting platformsMediumMediumFocus on unique value props (cross-gym history, role flexibility)Technical scalabilityMediumLowBuild with scalability in mind, utilize cloud solutions
+8. Monetization Strategy
+Freemium Model
+
+Free Tier: Basic features for all users
+Premium Features:
+
+For Members: Detailed fitness history analytics, progress tracking reports
+For Gyms: Enhanced listing, additional manager accounts, detailed reports
+For Trainers: Profile promotion, advanced availability management
+
+
+
+Subscription Model
+
+Monthly/annual subscription for gyms based on size/member count
+Potential commission on trainer bookings made through platform
+
+9. Testing & Quality Assurance
+Testing Strategy
+
+Unit testing for core functionality
+Integration testing for user workflows
+End-to-end testing for critical paths (registration, invitation, approval)
+User acceptance testing with representative users from each role
+
+QA Focus Areas
+
+Role transition edge cases
+Approval workflow integrity
+Data privacy and permission boundaries
+Performance under load
+
+10. Team Structure & Resources
+Core Team
+
+Project Manager / Product Owner
+UI/UX Designer
+Frontend Developer (React/Next.js)
+Backend Developer (Node.js)
+Database Specialist
+QA Engineer
+
+Extended Team (as needed)
+
+DevOps Engineer
+Mobile Developer (for later phases)
+Marketing Specialist
+
+11. Implementation Guidelines
+Development Principles
+
+Mobile-first responsive design
+Accessibility standards compliance
+Regular security audits
+Continuous integration and deployment
+
+Coding Standards
+
+JavaScript/TypeScript style guide
+Code documentation requirements
+Code review process
+Testing coverage requirements
+
+12. Launch Strategy
+Pre-launch
+
+Beta program with select gyms and trainers
+Feedback collection and implementation
+Performance optimization
+Security audit
+
+Launch
+
+Phased rollout by geographic region
+Onboarding support for early adopters
+Monitoring for issues and quick resolution
+
+Post-launch
+
+Feature usage analytics
+Regular feedback collection
+Iterative improvements based on user data
+
+13. Success Metrics
+
+User acquisition and retention rates by role type
+Platform engagement metrics (sessions, features used)
+Invitation acceptance rate
+Time to complete key workflows
+User satisfaction scores
+
+14. Conclusion
+Sportiva has the potential to transform how gyms, trainers, and members interact in the digital space. By starting with a focused MVP and gradually expanding features based on user feedback, the platform can address real market needs while maintaining a quality user experience. The proposed technical architecture provides a solid foundation for growth, and the multi-phase approach allows for iteration and refinement.
+The success of this project will largely depend on addressing the challenges of multi-role management and ensuring a seamless, intuitive user experience across all touchpoints. With careful attention to these factors, sportiva can become a valuable tool for the fitness industry ecosystem.
+
+"
