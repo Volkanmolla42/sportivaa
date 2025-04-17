@@ -6,7 +6,7 @@ import { getUserName, getUserGyms, getGymsByManager, getTrainerProfile } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowRight, Calendar, Dumbbell, Users, Building2, Activity, Medal } from "lucide-react";
+import { ArrowRight, Calendar, Dumbbell, Users, Building2, Medal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Tip tanımlamaları
