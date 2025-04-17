@@ -13,15 +13,21 @@ export default function UserNameStep({ userId, onComplete }: UserNameStepProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // error değişkeni kullanılıyor, sorun yok.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     try {
       await updateUserName(userId, firstName, lastName);
-      onComplete && onComplete();
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+      if (onComplete) onComplete();
+    } catch (err: unknown) {
+      // err tipi artık unknown, typescript önerisiyle daha güvenli
+      if (err && typeof err === "object" && "message" in err) {
+        setError((err as { message?: string }).message || "Bir hata oluştu.");
+      } else {
+        setError("Bir hata oluştu.");
+      }
     } finally {
       setIsLoading(false);
     }

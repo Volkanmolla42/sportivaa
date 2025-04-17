@@ -62,10 +62,14 @@ export default function TrainerRegisterForm({
       });
       
       onComplete?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let errorMsg = "Bir hata oluştu.";
+      if (err && typeof err === "object" && "message" in err) {
+        errorMsg = (err as { message?: string }).message || errorMsg;
+      }
       setStatus({
         isLoading: false,
-        error: err.message || "Bir hata oluştu.",
+        error: errorMsg,
         success: "",
       });
     }

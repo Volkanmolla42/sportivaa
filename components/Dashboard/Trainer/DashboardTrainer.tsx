@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getUserName, getTrainerProfile } from "@/lib/profileApi";
 import type { User } from "@/types/supabase";
 import { TrainerRegisterForm } from "@/components/Forms";
@@ -58,7 +58,7 @@ export default function DashboardTrainer({ userId }: { userId: string }) {
     error: null,
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
       const [userData, trainerData] = await Promise.all([
@@ -71,19 +71,23 @@ export default function DashboardTrainer({ userId }: { userId: string }) {
         isLoading: false,
         error: null,
       });
-    } catch (error) {
+    } catch (err: unknown) {
       setState({
         user: null,
         trainerProfile: null,
         isLoading: false,
-        error: "Kullanıcı bilgileri yüklenirken bir hata oluştu.",
+        error:
+          err && typeof err === "object" && "message" in err
+            ? (err as { message?: string }).message ||
+              "Kullanıcı bilgileri yüklenirken bir hata oluştu."
+            : "Kullanıcı bilgileri yüklenirken bir hata oluştu.",
       });
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
-  }, [userId]);
+  }, [userId, fetchData]);
 
   const { user, trainerProfile, isLoading, error } = state;
 
@@ -121,8 +125,8 @@ export default function DashboardTrainer({ userId }: { userId: string }) {
                 Eğitmen Profili Oluştur
               </h2>
               <p className="mb-4 text-muted-foreground">
-                Eğitmen olarak hizmet verebilmek için lütfen profil bilgilerinizi
-                tamamlayın.
+                Eğitmen olarak hizmet verebilmek için lütfen profil
+                bilgilerinizi tamamlayın.
               </p>
               <TrainerRegisterForm
                 userId={userId}

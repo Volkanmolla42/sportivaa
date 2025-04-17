@@ -26,8 +26,12 @@ export function GymCreateForm({ ownerUserId, onCreated }: GymCreateFormProps) {
       setAddress("");
       setPhone("");
       if (onCreated) onCreated(gymId);
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "message" in err) {
+        setError((err as { message?: string }).message || "Bir hata oluştu.");
+      } else {
+        setError("Bir hata oluştu.");
+      }
     } finally {
       setIsLoading(false);
     }

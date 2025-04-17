@@ -16,7 +16,6 @@ import {
   ArrowRightIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
 
 // Footer için veri yapıları
 type FooterLinkGroup = {
@@ -203,7 +202,7 @@ export default function FooterSection() {
               >
                 <Link 
                   href="/newsletter" 
-                  className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors duration-300"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
                 >
                   <span>Bültenimize Abone Olun</span>
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
@@ -259,7 +258,7 @@ export default function FooterSection() {
             </p>
             <span className="flex items-center ml-3 text-gray-500 dark:text-gray-500 text-sm">
               <HeartIcon className="h-3 w-3 text-red-500 mr-1" />
-              <span>Türkiye'de geliştirildi</span>
+              <span>Türkiye&apos;de geliştirildi</span>
             </span>
           </div>
           

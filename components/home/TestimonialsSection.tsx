@@ -369,7 +369,7 @@ function TestimonialCard3D({
       </div>
       
       <p className="text-gray-700 dark:text-gray-300 mb-6 flex-grow relative z-10">
-        "{testimonial.content}"
+        &quot;{testimonial.content}&quot;
       </p>
       
       <div className="flex items-center gap-3 mt-auto relative z-10">

@@ -60,6 +60,7 @@ export default function DashboardMember({ userId }: { userId: string }) {
           isLoadingUser: false,
         }));
       } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
         setUserData((prev) => ({
           ...prev,
           isLoadingUser: false,
@@ -79,12 +80,14 @@ export default function DashboardMember({ userId }: { userId: string }) {
       try {
         const gymsRaw = await getUserGyms(userId);
 
-        const gyms: Gym[] = gymsRaw.map((g: any) => ({
-          id: g.gym_id,
-          name: g.gym_name,
-          city: g.gym_city,
-          owner_user_id: null,
-        }));
+        const gyms: Gym[] = gymsRaw.map(
+          (g: { gym_id: string; gym_name: string; gym_city: string }) => ({
+            id: g.gym_id,
+            name: g.gym_name,
+            city: g.gym_city,
+            owner_user_id: null,
+          })
+        );
 
         setUserData((prev) => ({
           ...prev,
@@ -92,6 +95,7 @@ export default function DashboardMember({ userId }: { userId: string }) {
           isLoadingGyms: false,
         }));
       } catch (err) {
+        console.error("Salon bilgileri yüklenirken hata:", err);
         setUserData((prev) => ({
           ...prev,
           userGyms: [],

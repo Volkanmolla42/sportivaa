@@ -27,8 +27,12 @@ export default function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) 
       setUserId("");
       setRole("Member");
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "message" in err) {
+        setError((err as { message?: string }).message || "Bir hata oluştu.");
+      } else {
+        setError("Bir hata oluştu.");
+      }
     } finally {
       setIsLoading(false);
     }

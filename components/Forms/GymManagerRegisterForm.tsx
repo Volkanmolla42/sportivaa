@@ -64,10 +64,10 @@ export default function GymManagerRegisterForm({ userId, onComplete }: GymManage
       });
       
       onComplete?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus({
         isLoading: false,
-        error: err.message || "Bir hata oluştu.",
+        error: (err && typeof err === "object" && "message" in err) ? (err as { message?: string }).message || "Bir hata oluştu." : "Bir hata oluştu.",
         success: "",
       });
     }

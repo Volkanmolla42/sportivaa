@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getGymMembers, addMemberToGym } from "@/lib/profileApi";
-import EmailAutocomplete from "@/components/utils/EmailAutocomplete"
+import EmailAutocomplete from "@/components/utils/EmailAutocomplete";
 
 interface GymDetailProps {
   gym: { id: string; name: string; city: string };
@@ -9,7 +9,9 @@ interface GymDetailProps {
 }
 
 export default function GymDetail({ gym, onBack }: GymDetailProps) {
-  const [members, setMembers] = useState<{ id: string; first_name: string; last_name: string; email: string }[]>([]);
+  const [members, setMembers] = useState<
+    { id: string; first_name: string; last_name: string; email: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +26,12 @@ export default function GymDetail({ gym, onBack }: GymDetailProps) {
 
   return (
     <div className="p-4">
-      <button onClick={onBack} className="mb-4 text-primary underline">← Geri</button>
-      <h2 className="text-xl font-bold mb-2">{gym.name} - {gym.city}</h2>
+      <button onClick={onBack} className="mb-4 text-primary underline">
+        ← Geri
+      </button>
+      <h2 className="text-xl font-bold mb-2">
+        {gym.name} - {gym.city}
+      </h2>
       <div className="mb-4">Salon üyeleri:</div>
       {loading ? (
         <div>Yükleniyor...</div>
@@ -34,25 +40,46 @@ export default function GymDetail({ gym, onBack }: GymDetailProps) {
       ) : (
         <ul className="space-y-1">
           {members.map((m) => (
-            <li key={m.id} className="border rounded p-2 bg-muted flex justify-between items-center">
-              <span>{m.first_name} {m.last_name} ({m.email})</span>
+            <li
+              key={m.id}
+              className="border rounded p-2 bg-muted flex justify-between items-center"
+            >
+              <span>
+                {m.first_name} {m.last_name} ({m.email})
+              </span>
             </li>
           ))}
         </ul>
       )}
       {/* Üye ekleme formu */}
-      <GymMemberAddForm gymId={gym.id} onAdded={() => {
-        setLoading(true);
-        getGymMembers(gym.id).then(setMembers).finally(() => setLoading(false));
-      }} />
+      <GymMemberAddForm
+        gymId={gym.id}
+        onAdded={() => {
+          setLoading(true);
+          getGymMembers(gym.id)
+            .then(setMembers)
+            .finally(() => setLoading(false));
+        }}
+      />
     </div>
   );
 }
 
 // Üye ekleme formu
-function GymMemberAddForm({ gymId, onAdded }: { gymId: string; onAdded: () => void }) {
+function GymMemberAddForm({
+  gymId,
+  onAdded,
+}: {
+  gymId: string;
+  onAdded: () => void;
+}) {
   const [email, setEmail] = useState("");
-  const [selectedUser, setSelectedUser] = useState<{ id: string; email: string; first_name: string; last_name: string } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -68,8 +95,12 @@ function GymMemberAddForm({ gymId, onAdded }: { gymId: string; onAdded: () => vo
       setEmail("");
       setSelectedUser(null);
       onAdded();
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+    } catch (err: unknown) {
+      setError(
+        err && typeof err === "object" && "message" in err
+          ? (err as { message?: string }).message || "Bir hata oluştu."
+          : "Bir hata oluştu."
+      );
     } finally {
       setLoading(false);
     }
@@ -80,18 +111,19 @@ function GymMemberAddForm({ gymId, onAdded }: { gymId: string; onAdded: () => vo
       <label className="font-medium">Üye Ekle (E-posta):</label>
       <EmailAutocomplete
         value={email}
-        onChange={v => {
+        onChange={(v) => {
           setEmail(v);
           setSelectedUser(null);
         }}
-        onSelect={user => {
+        onSelect={(user) => {
           setEmail(user.email);
           setSelectedUser(user);
         }}
       />
       {selectedUser && (
         <div className="text-xs text-muted-foreground mt-1">
-          Seçilen: {selectedUser.first_name} {selectedUser.last_name} ({selectedUser.email})
+          Seçilen: {selectedUser.first_name} {selectedUser.last_name} (
+          {selectedUser.email})
         </div>
       )}
       <button

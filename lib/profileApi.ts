@@ -20,7 +20,7 @@ export async function updateUserRole(
   role: "Trainer" | "GymManager",
   value: boolean
 ): Promise<void> {
-  let updateObj: any = {};
+  const updateObj: Partial<{ is_trainer: boolean; is_gymmanager: boolean }> = {};
   if (role === "Trainer") updateObj.is_trainer = value;
   if (role === "GymManager") updateObj.is_gymmanager = value;
   const { error } = await supabase
@@ -79,11 +79,19 @@ export async function getUserGyms(
     .eq("user_id", userId);
   if (error) throw error;
   return (
-    data?.map((item: any) => ({
-      gym_id: item.gym_id,
-      gym_name: item.gyms?.name || "",
-      gym_city: item.gyms?.city || "",
-    })) || []
+    data?.map((item: { gym_id: string; gyms?: { name?: string; city?: string } | { name?: string; city?: string }[] }) => {
+      let gymsObj: { name?: string; city?: string } | undefined;
+      if (Array.isArray(item.gyms)) {
+        gymsObj = item.gyms[0];
+      } else {
+        gymsObj = item.gyms;
+      }
+      return {
+        gym_id: String(item.gym_id),
+        gym_name: gymsObj?.name || "",
+        gym_city: gymsObj?.city || "",
+      };
+    }) || []
   );
 }
 
@@ -172,12 +180,20 @@ export async function getGymMembers(
     .select("user_id, user:users(first_name, last_name, email)")
     .eq("gym_id", gymId);
   if (error) throw error;
-  return (data || []).map((item: any) => ({
-    id: item.user_id,
-    first_name: item.user?.first_name || "",
-    last_name: item.user?.last_name || "",
-    email: item.user?.email || "",
-  }));
+  return (data || []).map((item: { user_id: string; user?: { first_name?: string; last_name?: string; email?: string } | { first_name?: string; last_name?: string; email?: string }[] }) => {
+    let userObj: { first_name?: string; last_name?: string; email?: string } | undefined;
+    if (Array.isArray(item.user)) {
+      userObj = item.user[0];
+    } else {
+      userObj = item.user;
+    }
+    return {
+      id: item.user_id,
+      first_name: userObj?.first_name || "",
+      last_name: userObj?.last_name || "",
+      email: userObj?.email || "",
+    };
+  });
 }
 
 // Bir salona üye ekle (email ile, doğrudan users tablosunu kullan)
@@ -252,7 +268,7 @@ export async function getUserSessionWithRoles(): Promise<{ userId: string | null
     const user = session.user;
     const roles = await getUserRoles(user.id);
     return { userId: user.id, roles };
-  } catch (_err) {
+  } catch {
     return { userId: null, roles: [] };
   }
 }

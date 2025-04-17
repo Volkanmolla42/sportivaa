@@ -4,15 +4,15 @@ import { ReactNode, useEffect, useState } from "react";
 import { getUserSessionWithRoles } from "@/lib/profileApi";
 import { usePathname, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  User, 
-  Dumbbell, 
-  Building2, 
-  Menu, 
-  X, 
-  ChevronDown, 
-  LogOut, 
-  Home 
+import {
+  User,
+  Dumbbell,
+  Building2,
+  Menu,
+  X,
+  ChevronDown,
+  LogOut,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -44,61 +44,63 @@ interface RoleInfo {
 
 // Rol bilgilerinin tanımlanması
 const ROLE_ROUTES: Record<string, RoleInfo> = {
-  Member: { 
-    label: "Üye", 
-    path: "/dashboard/member", 
+  Member: {
+    label: "Üye",
+    path: "/dashboard/member",
     icon: <User className="w-5 h-5" />,
-    description: "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin."
+    description:
+      "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin.",
   },
-  Trainer: { 
-    label: "Eğitmen", 
-    path: "/dashboard/trainer", 
+  Trainer: {
+    label: "Eğitmen",
+    path: "/dashboard/trainer",
     icon: <Dumbbell className="w-5 h-5" />,
-    description: "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin."
+    description:
+      "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin.",
   },
-  GymManager: { 
-    label: "Salon Yöneticisi", 
-    path: "/dashboard/gymmanager", 
+  GymManager: {
+    label: "Salon Yöneticisi",
+    path: "/dashboard/gymmanager",
     icon: <Building2 className="w-5 h-5" />,
-    description: "Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin."
-  }
+    description: "Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin.",
+  },
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Merkezi auth context'ten oturum bilgisini al
   const { userId, isLoading: authLoading } = useAuth();
-  
+
   // Durum değişkenleri
   const [state, setState] = useState({
     roles: [] as string[],
     selectedRole: "",
     loading: true,
-    mobileMenuOpen: false
+    mobileMenuOpen: false,
   });
-  
+
   const router = useRouter();
   const pathname = usePathname();
 
   // Kullanıcı rollerini getir
   useEffect(() => {
     async function fetchRoles() {
-      setState(prev => ({ ...prev, loading: true }));
-      
+      setState((prev) => ({ ...prev, loading: true }));
+
       try {
         if (!userId) {
-          setState(prev => ({ ...prev, loading: false }));
+          setState((prev) => ({ ...prev, loading: false }));
           router.push("/auth/login");
           return;
         }
-        
+
         const { roles } = await getUserSessionWithRoles();
-        
+
         // Mevcut rolü belirle
         let selectedRole = "";
-        const found = Object.entries(ROLE_ROUTES).find(([role, val]) => 
+        const found = Object.entries(ROLE_ROUTES).find(([, val]) =>
           pathname.startsWith(val.path)
         );
-        
+
         if (found) {
           selectedRole = found[0];
         } else if (roles.includes("GymManager")) {
@@ -108,19 +110,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         } else {
           selectedRole = "Member";
         }
-        
-        setState(prev => ({ 
-          ...prev, 
-          roles, 
-          selectedRole, 
-          loading: false 
+
+        setState((prev) => ({
+          ...prev,
+          roles,
+          selectedRole,
+          loading: false,
         }));
       } catch (error) {
         console.error("Roller yüklenirken hata:", error);
-        setState(prev => ({ ...prev, loading: false }));
+        setState((prev) => ({ ...prev, loading: false }));
       }
     }
-    
+
     fetchRoles();
   }, [userId, pathname, router]);
 
@@ -136,15 +138,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Rol değiştirme işlevi
   const handleRoleChange = (role: string) => {
-    setState(prev => ({ ...prev, selectedRole: role }));
+    setState((prev) => ({ ...prev, selectedRole: role }));
     router.push(ROLE_ROUTES[role].path);
   };
 
   // Mobil menü geçişi
   const toggleMobileMenu = () => {
-    setState(prev => ({ 
-      ...prev, 
-      mobileMenuOpen: !prev.mobileMenuOpen 
+    setState((prev) => ({
+      ...prev,
+      mobileMenuOpen: !prev.mobileMenuOpen,
     }));
   };
 
@@ -182,9 +184,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
         <div className="text-center mb-8">
           <LogoLink size="large" />
-          <p className="mt-4 text-slate-600 dark:text-slate-400">Lütfen devam etmek için giriş yapın.</p>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">
+            Lütfen devam etmek için giriş yapın.
+          </p>
         </div>
-        <Button asChild className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white border-none">
+        <Button
+          asChild
+          className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white border-none"
+        >
           <Link href="/auth/login">Giriş Yap</Link>
         </Button>
         <Button asChild variant="outline">
@@ -200,9 +207,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
         <div className="text-center mb-8">
           <LogoLink size="large" />
-          <p className="mt-4 text-slate-600 dark:text-slate-400">Platformu kullanabilmek için rolünüzün olması gerekiyor.</p>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">
+            Platformu kullanabilmek için rolünüzün olması gerekiyor.
+          </p>
         </div>
-        <Button asChild className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white border-none">
+        <Button
+          asChild
+          className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white border-none"
+        >
           <Link href="/profile/roles">Rol Ekle</Link>
         </Button>
         <Button asChild variant="outline">
@@ -219,7 +231,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="container mx-auto px-4 h-16 flex justify-between items-center">
           {/* Logo ve mobil menü butonu */}
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={toggleMobileMenu}
               className="lg:hidden p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
               aria-label="Mobil Menü"
@@ -242,15 +254,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Home className="w-4 h-4" />
               <span>Ana Sayfa</span>
             </Link>
-            
+
             <TooltipProvider>
               {state.roles.map((role) => (
                 <Tooltip key={role}>
                   <TooltipTrigger asChild>
                     <button
                       className={`px-3 py-2 rounded-md text-sm flex items-center gap-1.5 ${
-                        state.selectedRole === role 
-                          ? "bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400" 
+                        state.selectedRole === role
+                          ? "bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                           : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
                       onClick={() => handleRoleChange(role)}
@@ -293,7 +305,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-red-500 dark:text-red-400 cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-red-500 dark:text-red-400 cursor-pointer"
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 <span>Çıkış Yap</span>
               </DropdownMenuItem>
@@ -310,23 +325,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 href="/"
                 className="py-3 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 flex items-center gap-2"
-                onClick={() => setState(prev => ({ ...prev, mobileMenuOpen: false }))}
+                onClick={() =>
+                  setState((prev) => ({ ...prev, mobileMenuOpen: false }))
+                }
               >
                 <Home className="w-5 h-5" />
                 <span>Ana Sayfa</span>
               </Link>
-              
+
               {state.roles.map((role) => (
                 <button
                   key={role}
                   className={`py-3 flex items-center gap-2 text-left ${
-                    state.selectedRole === role 
-                      ? "text-teal-600 dark:text-teal-400" 
+                    state.selectedRole === role
+                      ? "text-teal-600 dark:text-teal-400"
                       : "text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400"
                   }`}
                   onClick={() => {
                     handleRoleChange(role);
-                    setState(prev => ({ ...prev, mobileMenuOpen: false }));
+                    setState((prev) => ({ ...prev, mobileMenuOpen: false }));
                   }}
                 >
                   {ROLE_ROUTES[role].icon}
@@ -344,9 +361,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Ana İçerik */}
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }

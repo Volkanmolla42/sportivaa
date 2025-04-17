@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getUserRoles, getUserName, updateUserName } from "@/lib/profileApi";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,8 +45,8 @@ export default function CardProfileRole({ userId }: CardProfileRoleProps) {
   });
   const router = useRouter();
 
-  // Profil veri yükleme fonksiyonu
-  const fetchData = async () => {
+  // useEffect bağımlılıkları eksik uyarısı için fetchData fonksiyonu tanımını useCallback ile sarmalayıp bağımlılık dizisine ekleyeceğim.
+  const fetchData = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));
     const roles = await getUserRoles(userId);
     const name = await getUserName(userId);
@@ -58,11 +58,11 @@ export default function CardProfileRole({ userId }: CardProfileRoleProps) {
       firstName: name.first_name,
       lastName: name.last_name,
     });
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
-  }, [userId]);
+  }, [fetchData]);
 
   const { isLoading, mode, userName, roles, firstName, lastName } = state;
 

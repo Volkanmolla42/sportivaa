@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -67,7 +67,7 @@ export default function HeroSection() {
               className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600/10 to-teal-600/10 dark:from-indigo-400/10 dark:to-teal-400/10 border border-indigo-100 dark:border-indigo-900"
             >
               <span className="text-sm font-medium bg-gradient-to-r from-indigo-600 to-teal-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-teal-400">
-                Türkiye'nin en büyük spor yönetim platformu 🚀
+                Türkiye&apos;nin en büyük spor yönetim platformu 
               </span>
             </motion.div>
             
@@ -106,7 +106,7 @@ export default function HeroSection() {
               {userId ? (
                 <Button asChild size="lg" className="group relative shadow-xl bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-700 hover:to-teal-700 dark:from-indigo-600 dark:to-teal-600 text-white border-none overflow-hidden">
                   <Link href="/dashboard" className="flex items-center gap-2 relative z-10">
-                    Dashboard'a Git
+                    Dashboard&apos;a Git
                     <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-500 to-teal-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity"></span>
                   </Link>
