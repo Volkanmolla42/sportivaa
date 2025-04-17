@@ -57,8 +57,7 @@ const Logo = ({ className = "", size = "default" }: { className?: string; size?:
   );
 }
 
-// Logo'yu Link ile sarmalayan yardımcı bileşen
-export function LogoLink({ href = "/", className = "", size = "default" }: { href?: string; className?: string; size?: "small" | "default" | "large" }) {
+ function LogoLink({ href = "/", className = "", size = "default" }: { href?: string; className?: string; size?: "small" | "default" | "large" }) {
   return (
     <Link href={href} className={`inline-block ${className}`}>
       <Logo size={size} />
@@ -66,4 +65,4 @@ export function LogoLink({ href = "/", className = "", size = "default" }: { hre
   );
 }
 
-export default Logo;
+export default LogoLink

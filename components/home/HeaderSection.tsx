@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogoLink } from "./Logo"; 
+import LogoLink from "./Logo";
 
 // Ana menü öğeleri
 const menuItems = [
