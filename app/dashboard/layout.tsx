@@ -1,8 +1,8 @@
 "use client";
 import { ReactNode, useEffect, useState, useTransition } from "react";
-import { getUserRoles } from "@/lib/profileApi";
+import { getUserSessionWithRoles } from "@/lib/profileApi";
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ROLE_ROUTES: Record<string, { label: string; path: string }> = {
   GymManager: { label: "Salon Yöneticisi", path: "/dashboard/gymmanager" },
@@ -15,24 +15,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [isPending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    async function fetchUserAndRoles() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        const userRoles = await getUserRoles(user.id);
-        setRoles(userRoles);
-        const found = Object.entries(ROLE_ROUTES).find(([role, val]) => pathname.startsWith(val.path));
-        if (found) setSelectedRole(found[0]);
-        else if (userRoles.includes("GymManager")) setSelectedRole("GymManager");
-        else if (userRoles.includes("Trainer")) setSelectedRole("Trainer");
-        else setSelectedRole("Member");
+    async function fetchSession() {
+      setLoading(true);
+      const { userId: uid, roles: fetchedRoles } = await getUserSessionWithRoles();
+      setUserId(uid);
+      setRoles(fetchedRoles);
+      if (!uid) {
+        setLoading(false);
+        return;
       }
+      const found = Object.entries(ROLE_ROUTES).find(([role, val]) => pathname.startsWith(val.path));
+      if (found) setSelectedRole(found[0]);
+      else if (fetchedRoles.includes("GymManager")) setSelectedRole("GymManager");
+      else if (fetchedRoles.includes("Trainer")) setSelectedRole("Trainer");
+      else setSelectedRole("Member");
+      setLoading(false);
     }
-    fetchUserAndRoles();
+    fetchSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
@@ -41,6 +45,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     startTransition(() => {
       router.push(ROLE_ROUTES[role].path);
     });
+  }
+
+  if (loading) {
+    // Skeleton loading UI
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="p-4 md:p-8 border-b bg-card flex flex-col md:flex-row md:items-center gap-4">
+          <Skeleton className="h-6 w-40 mb-2" />
+          <Skeleton className="h-10 w-48" />
+        </div>
+        <main className="w-full max-w-5xl mx-auto py-6 px-2">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!userId) {
@@ -65,7 +88,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <option key={role} value={role}>{ROLE_ROUTES[role]?.label || role}</option>
           ))}
         </select>
-       
       </div>
       <main className="w-full max-w-5xl mx-auto py-6 px-2">
         {children}

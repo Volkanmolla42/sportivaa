@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getGymMembers, addMemberToGym } from "@/lib/profileApi";
-import EmailAutocomplete from "../components/EmailAutocomplete";
+import EmailAutocomplete from "@/components/utils/EmailAutocomplete"
 
 interface GymDetailProps {
   gym: { id: string; name: string; city: string };

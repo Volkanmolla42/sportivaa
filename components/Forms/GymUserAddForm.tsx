@@ -10,7 +10,7 @@ export type GymUserAddFormProps = {
   addedBy: string;
 };
 
-export function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) {
+export default function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) {
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState<"Member" | "Trainer">("Member");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ export function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) {
         onChange={(e) => setUserId(e.target.value)}
         required
       />
-      <Select value={role} onValueChange={setRole}>
+      <Select value={role} onValueChange={(value: string) => setRole(value as "Member" | "Trainer")}>
         <SelectItem value="Member">Üye</SelectItem>
         <SelectItem value="Trainer">Antrenör</SelectItem>
       </Select>

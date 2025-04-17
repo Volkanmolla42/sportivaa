@@ -1,5 +1,5 @@
 "use client";
-import DashboardGymManager from "../DashboardGymManager";
+import DashboardGymManager from "@/components/Dashboard/GymManager/DashboardGymManager";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserRoles } from "@/lib/profileApi";

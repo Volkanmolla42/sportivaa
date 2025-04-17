@@ -1,8 +1,7 @@
 "use client";
-import DashboardMember from "../DashboardMember";
+import DashboardMember from "@/components/Dashboard/Member/DashboardMember";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { getUserRoles } from "@/lib/profileApi";
+import { getUserSessionWithRoles } from "@/lib/profileApi";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MemberDashboardPage() {
@@ -11,17 +10,14 @@ export default function MemberDashboardPage() {
   const [hasRole, setHasRole] = useState<boolean>(false);
 
   useEffect(() => {
-    async function fetchUser() {
+    async function fetchSession() {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        const roles = await getUserRoles(user.id);
-        setHasRole(roles.includes("Member"));
-      }
+      const { userId: uid, roles } = await getUserSessionWithRoles();
+      setUserId(uid);
+      setHasRole(roles.includes("Member"));
       setLoading(false);
     }
-    fetchUser();
+    fetchSession();
   }, []);
 
   if (loading) return (

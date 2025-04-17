@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getUserName, getGymsByManager } from "@/lib/profileApi";
-import GymDetail from "./GymDetail";
+import GymDetail from "@/components/Dashboard/GymManager/GymDetail";
 
 export default function DashboardGymManager({ userId }: { userId: string }) {
   const [user, setUser] = useState<{ first_name: string; last_name: string } | null>(null);
