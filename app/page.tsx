@@ -1,4 +1,4 @@
-import { CtaSection, FeaturesSection, FooterSection, HeaderSection, HeroSection, TestimonialsSection } from "@/components/Home";
+import { CtaSection, FeaturesSection, FooterSection, HeaderSection, HeroSection, TestimonialsSection } from "@/components/Home/index";
 
 
 export default function Home() {
