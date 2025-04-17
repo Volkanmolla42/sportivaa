@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useState } from "react";
 import { getUserSessionWithRoles } from "@/lib/profileApi";
 import { usePathname, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogoLink } from "@/components/Home/Logo"; 
 import { 
   User, 
   Dumbbell, 
@@ -33,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { LogoLink } from "@/components/Home";
 
 // Rol bilgilerinin tanımlanması
 interface RoleInfo {
