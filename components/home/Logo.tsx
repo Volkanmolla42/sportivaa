@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export function Logo({ className = "", size = "default" }: { className?: string; size?: "small" | "default" | "large" }) {
+const Logo = ({ className = "", size = "default" }: { className?: string; size?: "small" | "default" | "large" }) => {
   const textSizes = {
     small: "text-xl",
     default: "text-2xl",
@@ -58,10 +58,12 @@ export function Logo({ className = "", size = "default" }: { className?: string;
 }
 
 // Logo'yu Link ile sarmalayan yardımcı bileşen
-export default function LogoLink({ href = "/", className = "", size = "default" }: { href?: string; className?: string; size?: "small" | "default" | "large" }) {
+export function LogoLink({ href = "/", className = "", size = "default" }: { href?: string; className?: string; size?: "small" | "default" | "large" }) {
   return (
     <Link href={href} className={`inline-block ${className}`}>
       <Logo size={size} />
     </Link>
   );
 }
+
+export default Logo;
