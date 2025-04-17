@@ -1,0 +1,18 @@
+Görsel Dosyaları İçin Notlar:
+
+1. Hero Görseli:
+   - Dosya yolu: /public/images/hero-image.jpg
+   - İçerik: Modern bir spor salonu veya fitness ekipmanları gösteren yüksek kaliteli bir görsel kullanın
+
+2. Referans Görselleri:
+   - Dosya yolları: 
+     * /public/images/testimonials/person1.jpg
+     * /public/images/testimonials/person2.jpg
+     * /public/images/testimonials/person3.jpg
+     * /public/images/testimonials/person4.jpg
+     * /public/images/testimonials/person5.jpg
+   - İçerik: Farklı yaş ve cinsiyetlerde profesyonel görünümlü kişilerin portre fotoğraflarını kullanın
+
+Bu görseller henüz oluşturulmadı. Sayfanın doğru görüntülenmesi için bu dosyaları eklemeniz gerekecek. Oluşturduğum bileşenlerde görsellerin boyutlarına ve yerleşimlerine uygun olarak düzenlemeler yapıldı, ancak görseller olmadan bazı bileşenlerde görsel yerleşim alanları boş görünecektir.
+
+NOT: Görseller olmaması durumunda bileşenler hata vermeyecek şekilde tasarlanmıştır.
