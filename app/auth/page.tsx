@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
@@ -19,15 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { Loader2 } from "lucide-react";
 import LogoLink from "@/components/home/Logo";
-import dynamic from "next/dynamic";
-
-// Dinamik olarak AuthModeImage'ı yükle
-const AuthModeImage = dynamic(() => import("./AuthModeImage"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-80 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />
-  ),
-});
+import AuthModeImage from "./AuthModeImage";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -94,13 +86,7 @@ export default function AuthPage() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="hidden md:flex flex-col items-center justify-center p-8">
               <div className="relative w-full h-80">
-                <Suspense
-                  fallback={
-                    <div className="w-full h-80 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />
-                  }
-                >
-                  <AuthModeImage />
-                </Suspense>
+                <AuthModeImage />
               </div>
               <h2 className="text-2xl font-bold mt-6 text-center">
                 {mode === "login"
