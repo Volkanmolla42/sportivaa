@@ -122,7 +122,7 @@ export default function HeaderSection() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <LogoLink />
+          <LogoLink size="large" />
 
           {/* Masaüstü Navigasyon */}
           <nav className="hidden md:flex items-center space-x-1">
@@ -202,12 +202,12 @@ export default function HeaderSection() {
             ) : (
               <div className="hidden sm:flex items-center space-x-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/auth/login">
+                  <Link href="?mode=login">
                     Giriş Yap
                   </Link>
                 </Button>
                 <Button asChild size="sm" className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white">
-                  <Link href="/auth/register">
+                  <Link href="?mode=register">
                     Kayıt Ol
                   </Link>
                 </Button>
