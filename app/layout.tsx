@@ -15,8 +15,53 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sportiva",
-  description: "Spor salonları, eğitmenler ve üyeler için dijital platform",
+  title: "Sportiva | Dijital Spor Platformu",
+  description: "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
+  keywords: [
+    "spor", "salon", "fitness", "egzersiz", "dijital platform", "rezervasyon", "analiz", "üyelik", "eğitmen", "yeni nesil spor"
+  ],
+  authors: [{ name: "Sportiva", url: "https://sportiva.com" }],
+  creator: "Sportiva",
+  openGraph: {
+    title: "Sportiva | Dijital Spor Platformu",
+    description: "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
+    url: "https://sportiva.com",
+    siteName: "Sportiva",
+    images: [
+      {
+        url: "/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Sportiva Logo"
+      }
+    ],
+    locale: "tr_TR",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sportiva | Dijital Spor Platformu",
+    description: "Spor salonları, eğitmenler ve üyeler için dijital platform.",
+    site: "@sportiva",
+    creator: "@sportiva",
+    images: [
+      "/icon-512x512.png"
+    ]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1
+    }
+  },
+  manifest: "/manifest.webmanifest"
 };
 
 export default function RootLayout({

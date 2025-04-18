@@ -16,7 +16,6 @@ import {
   Shield,
   Home,
 } from "lucide-react";
-import Link from "next/link";
 import { CardGyms, CardOwnedGyms } from "@/components/Gyms";
 
 interface UserData {
@@ -34,10 +33,20 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchUser() {
       setLoading(true);
+      // Önce session kontrolü!
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        setUser(null);
+        setLoading(false);
+        router.replace("/auth?mode=login");
+        return;
+      }
       // Kullanıcıyı getir
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error("Kullanıcı bilgileri alınamadı.:", error);
+        setUser(null);
+        setLoading(false);
         return;
       }
       if (data?.user) {
@@ -62,7 +71,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="w-20 h-20 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
         <p className="mt-4 text-gray-500 animate-pulse">Profil yükleniyor...</p>
       </div>
     );
@@ -71,39 +80,8 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="bg-red-50 dark:bg-red-900/20 p-8 rounded-xl border border-red-200 dark:border-red-800 shadow-lg max-w-md w-full">
-          <div className="flex items-center justify-center mb-4 text-red-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-center text-red-700 dark:text-red-400">
-            Kullanıcı bulunamadı
-          </h2>
-          <p className="mt-4 text-center text-red-600 dark:text-red-300">
-            Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <Link
-              href="/auth?mode=login"
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 transition shadow-md flex items-center gap-2"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Giriş Sayfasına Dön</span>
-            </Link>
-          </div>
-        </div>
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+        <p className="mt-4 text-gray-500 animate-pulse">Yönlendirme yapılıyor...</p>
       </div>
     );
   }
