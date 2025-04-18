@@ -1,4 +1,3 @@
-// Birleşik ana layout bileşeni yerine daha modüler bir yapı oluşturuldu
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
@@ -31,22 +30,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Logo from "@/components/home/Logo";
 
-// Rol bilgilerinin tanımlanması
+// Arayüz tanımlamaları
+interface MenuItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  badge?: string;
+}
+
 interface RoleInfo {
   label: string;
   path: string;
   icon: React.ReactNode;
   description: string;
+  menuItems?: MenuItem[];
 }
 
 // Rol bilgilerinin tanımlanması
@@ -55,76 +58,139 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
     label: "Üye",
     path: "/dashboard/member",
     icon: <User className="w-5 h-5" />,
-    description:
-      "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin.",
+    description: "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin.",
+    menuItems: [
+      {
+        label: "Profil",
+        path: "/dashboard/member/profile",
+        icon: <User className="w-4 h-4" />
+      },
+      {
+        label: "Antrenmanlarım",
+        path: "/dashboard/member/workouts",
+        icon: <Dumbbell className="w-4 h-4" />
+      },
+      {
+        label: "Randevularım",
+        path: "/dashboard/member/appointments",
+        icon: <Calendar className="w-4 h-4" />,
+        badge: "Yeni"
+      },
+      {
+        label: "Üyeliklerim",
+        path: "/dashboard/member/memberships",
+        icon: <Building2 className="w-4 h-4" />
+      }
+    ]
   },
   Trainer: {
     label: "Eğitmen",
     path: "/dashboard/trainer",
     icon: <Dumbbell className="w-5 h-5" />,
-    description:
-      "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin.",
+    description: "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin.",
+    menuItems: [
+      {
+        label: "Profil",
+        path: "/dashboard/trainer/profile",
+        icon: <User className="w-4 h-4" />
+      },
+      {
+        label: "Öğrencilerim",
+        path: "/dashboard/trainer/students",
+        icon: <User className="w-4 h-4" />
+      },
+      {
+        label: "Programlarım",
+        path: "/dashboard/trainer/programs",
+        icon: <Dumbbell className="w-4 h-4" />
+      },
+      {
+        label: "Takvimim",
+        path: "/dashboard/trainer/calendar",
+        icon: <Calendar className="w-4 h-4" />
+      }
+    ]
   },
   GymManager: {
     label: "Salon Yöneticisi",
     path: "/dashboard/gymmanager",
     icon: <Building2 className="w-5 h-5" />,
     description: "Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin.",
+    menuItems: [
+      {
+        label: "Salonlarım",
+        path: "/dashboard/gymmanager/gyms",
+        icon: <Building2 className="w-4 h-4" />
+      },
+      {
+        label: "Üyeler",
+        path: "/dashboard/gymmanager/members",
+        icon: <User className="w-4 h-4" />
+      },
+      {
+        label: "Eğitmenler",
+        path: "/dashboard/gymmanager/trainers",
+        icon: <Dumbbell className="w-4 h-4" />
+      },
+      {
+        label: "Mali Rapor",
+        path: "/dashboard/gymmanager/finances",
+        icon: <Settings className="w-4 h-4" />,
+        badge: "Yeni"
+      }
+    ]
   },
 };
 
-// Dashboard ana düzeni
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { userId, isLoading: authLoading } = useAuth();
-  const [state, setState] = useState({
-    roles: [] as string[],
-    selectedRole: "",
-    loading: true,
-    mobileMenuOpen: false,
-  });
+  const { userId, isLoading: authLoading, user, userData } = useAuth();
 
+  const [roles, setRoles] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const router = useRouter();
-  const pathname: string = usePathname();
+  const pathname = usePathname();
 
   // Kullanıcı rollerini getir
   useEffect(() => {
     async function fetchRoles() {
-      setState((prev) => ({ ...prev, loading: true }));
+      setLoading(true);
 
       try {
         if (!userId) {
-          setState((prev) => ({ ...prev, loading: false }));
+          setLoading(false);
           router.push("/auth?mode=login");
           return;
         }
 
+        // Roller bilgisini alıyoruz
         const { roles } = await getUserSessionWithRoles();
+        // Kullanıcı adı ve e-posta bilgisi useAuth() context'inden alınacak.
 
         // Mevcut rolü belirle
-        let selectedRole = "";
+        let role = "";
         const found = Object.entries(ROLE_ROUTES).find(([, val]) =>
           pathname.startsWith(val.path)
         );
 
         if (found) {
-          selectedRole = found[0];
+          role = found[0];
         } else if (roles.includes("GymManager")) {
-          selectedRole = "GymManager";
+          role = "GymManager";
         } else if (roles.includes("Trainer")) {
-          selectedRole = "Trainer";
+          role = "Trainer";
         } else {
-          selectedRole = "Member";
+          role = "Member";
         }
 
-        setState((prev) => ({
-          ...prev,
-          roles,
-          selectedRole,
-          loading: false,
-        }));
+        setRoles(roles);
+        setSelectedRole(role);
+        setLoading(false);
       } catch (error) {
         console.error("Roller yüklenirken hata:", error);
-        setState((prev) => ({ ...prev, loading: false }));
+        setLoading(false);
       }
     }
 
@@ -132,41 +198,396 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [userId, pathname, router]);
 
   // Yükleme durumu
-  if (state.loading || authLoading) {
+  if (loading || authLoading) {
     return <DashboardLoadingSkeleton />;
   }
 
+  // Rol değişimi için fonksiyon
+  const handleRoleChange = (role: string) => {
+    setSelectedRole(role);
+    router.push(ROLE_ROUTES[role].path);
+  };
+  
+  // Çıkış yapma fonksiyonu
+  const handleSignOut = () => {
+    supabase.auth.signOut().then(() => {
+      router.push("/");
+    }).catch((error) => {
+      console.error("Çıkış yapılırken hata:", error);
+    });
+  };
+  
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
-      {/* Sidebar - büyük ekranlarda kalıcı */}
-      <DashboardSidebar 
-        roles={state.roles} 
-        selectedRole={state.selectedRole} 
-        router={router}
-      />
-
-      <div className="flex flex-col flex-grow min-h-0">
-        {/* Header */}
-        <DashboardHeader 
-          mobileMenuOpen={state.mobileMenuOpen} 
-          toggleMobileMenu={() => toggleMobileMenu(setState)}
-          onSignOut={() => handleSignOut(router)}
-        />
-
-        {/* Mobil Menü */}
-        {state.mobileMenuOpen && (
-          <DashboardMobileMenu 
-            roles={state.roles}
-            selectedRole={state.selectedRole}
-            onRoleChange={(role) => {
-              handleRoleChange(role, setState, router);
-              toggleMobileMenu(setState);
-            }}
-          />
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+        {/* Logo */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <Link href="/" className="flex items-center justify-center">
+            <Logo size="default" className="py-2" />
+          </Link>
+        </div>
+        
+        {/* Rol Seçimi */}
+        {roles.length > 1 && (
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full flex items-center justify-between gap-2 h-10">
+                  <div className="flex items-center gap-2">
+                    {ROLE_ROUTES[selectedRole]?.icon}
+                    <span className="font-medium">{ROLE_ROUTES[selectedRole]?.label}</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuLabel>Rolünü değiştir</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {roles.map((role) => (
+                  <DropdownMenuItem
+                    key={role}
+                    onClick={() => handleRoleChange(role)}
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer", 
+                      selectedRole === role && "bg-slate-100 dark:bg-slate-800"
+                    )}
+                  >
+                    {ROLE_ROUTES[role]?.icon}
+                    <div className="flex flex-col">
+                      <span>{ROLE_ROUTES[role]?.label}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
+                        {ROLE_ROUTES[role]?.description}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
+        
+        {/* Menü İçeriği */}
+        <ScrollArea className="flex-grow overflow-auto py-4">
+          <nav className="flex flex-col space-y-4 px-3">
+            {/* Dashboard */}
+            <div>
+              <div className="flex items-center px-3 mb-2">
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Dashboard</h2>
+              </div>
+              <Link 
+                href="/dashboard" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+              >
+                <Home className="h-5 w-5" />
+                <span>Ana Sayfa</span>
+              </Link>
+              
+              <Link 
+                href="/dashboard/notifications" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+              >
+                <Bell className="h-5 w-5" />
+                <span>Bildirimler</span>
+              </Link>
+            </div>
+            
+            {/* Seçilen Role Göre Menü */}
+            {selectedRole && ROLE_ROUTES[selectedRole]?.menuItems && (
+              <div>
+                <div className="flex items-center px-3 mb-2">
+                  <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {ROLE_ROUTES[selectedRole]?.label} Menüsü
+                  </h2>
+                </div>
+                <div className="space-y-1">
+                  {ROLE_ROUTES[selectedRole].menuItems.map((item, index) => (
+                    <Link
+                      key={index}
+                      href={item.path}
+                      className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+                    >
+                      <span className="flex items-center gap-3">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </span>
+                      
+                      {item.badge && (
+                        <Badge 
+                          variant="outline" 
+                          className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-xs"
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Genel Menü */}
+            <div>
+              <div className="flex items-center px-3 mb-2">
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Genel</h2>
+              </div>
+              <Link 
+                href="/dashboard/settings" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+              >
+                <Settings className="h-5 w-5" />
+                <span>Ayarlar</span>
+              </Link>
+              <Link 
+                href="/help" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+              >
+                <CircleHelp className="h-5 w-5" />
+                <span>Yardım</span>
+              </Link>
+            </div>
+          </nav>
+        </ScrollArea>
+        
+        {/* Kullanıcı Profili ve Çıkış */}
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+          {/* Kullanıcı Bilgisi */}
+          <div className="flex items-center mb-3 px-2">
+            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mr-3">
+              <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-grow overflow-hidden">
+              <div className="font-medium truncate">{userData?.first_name ? `${userData.first_name} ${userData.last_name || ''}` : "Kullanıcı"}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{userData?.email || user?.email || "kullanici@example.com"}</div>
+            </div>
+          </div>
 
-        {/* Ana İçerik */}
-        <main className="flex-grow p-6 overflow-auto">
+          {/* Çıkış Butonu */}
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Çıkış Yap</span>
+          </Button>
+        </div>
+      </aside>
+      
+      {/* Mobil Menü - Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 lg:hidden z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* Mobil Menü - Sidebar */}
+      <div className={`
+        fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-900 
+        transform transition-transform duration-300 ease-in-out lg:hidden
+        ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        {/* Mobil Menü Başlık */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800">
+          <Link href="/" className="flex items-center">
+            <Logo size="small" className="h-8" />
+          </Link>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+          </button>
+        </div>
+        
+        {/* Mobil Menü İçeriği */}
+        <ScrollArea className="h-[calc(100vh-4rem)]">
+          <div className="p-4 space-y-6">
+            {/* Kullanıcı Profili (Mobil) */}
+            <div className="flex items-center px-2 py-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
+              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mr-3">
+                <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+              </div>
+              <div className="flex-grow overflow-hidden">
+                <div className="font-medium truncate">{userData?.first_name ? `${userData.first_name} ${userData.last_name || ''}` : "Kullanıcı"}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{userData?.email || user?.email || "kullanici@example.com"}</div>
+              </div>
+            </div>
+            {/* Rol Seçimleri */}
+            {roles.length > 1 && (
+              <div>
+                <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  ROLLERİNİZ
+                </h3>
+                <div className="space-y-2">
+                  {roles.map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        handleRoleChange(role);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center justify-between p-2 rounded-md text-left w-full
+                        ${selectedRole === role ? "bg-slate-100 dark:bg-slate-800" : ""}
+                      `}
+                    >
+                      <div className="flex items-center gap-2">
+                        {ROLE_ROUTES[role]?.icon}
+                        <div>
+                          <div className="font-medium">{ROLE_ROUTES[role]?.label}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {ROLE_ROUTES[role]?.description}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Dashboard Menüsü */}
+            <div>
+              <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                DASHBOARD
+              </h3>
+              <div className="space-y-1">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Home className="h-5 w-5" />
+                  <span>Ana Sayfa</span>
+                </Link>
+                <Link
+                  href="/dashboard/notifications"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Bell className="h-5 w-5" />
+                  <span>Bildirimler</span>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Seçili Rol Menüsü */}
+            {selectedRole && ROLE_ROUTES[selectedRole]?.menuItems && (
+              <div>
+                <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  {ROLE_ROUTES[selectedRole]?.label.toUpperCase()} MENÜSÜ
+                </h3>
+                <div className="space-y-1">
+                  {ROLE_ROUTES[selectedRole].menuItems.map((item, index) => (
+                    <Link
+                      key={index}
+                      href={item.path}
+                      className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span className="flex items-center gap-3">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </span>
+                      
+                      {item.badge && (
+                        <Badge 
+                          variant="outline" 
+                          className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-xs"
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Genel Menü */}
+            <div>
+              <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                GENEL
+              </h3>
+              <div className="space-y-1">
+                <Link
+                  href="/dashboard/settings"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Ayarlar</span>
+                </Link>
+                <Link
+                  href="/help"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <CircleHelp className="h-5 w-5" />
+                  <span>Yardım</span>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Çıkış */}
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                onClick={() => {
+                  handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Çıkış Yap</span>
+              </Button>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
+      
+      {/* Ana İçerik Alanı */}
+      <div className="flex flex-col flex-grow min-h-0">
+        {/* Mobil Header */}
+        <header className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+          <div className="flex items-center justify-between h-16 px-4">
+            {/* Menü Butonu */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Menu className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+            </button>
+            
+            {/* Logo */}
+            <Link href="/dashboard" className="flex-grow flex justify-center">
+              <Logo size="small" className="h-8" />
+            </Link>
+            
+            {/* Kullanıcı Menüsü */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={handleSignOut}
+                  className="text-red-500 dark:text-red-400 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  <span>Çıkış Yap</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        
+        {/* İçerik */}
+        <main className="flex-grow p-4 md:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
@@ -176,266 +597,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 }
 
-// Dashboard Sidebar bileşeni
-function DashboardSidebar({ 
-  roles, 
-  selectedRole, 
-  router 
-}: { 
-  roles: string[], 
-  selectedRole: string, 
-  router: ReturnType<typeof useRouter>
-}) {
-  return (
-    <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-      <div className="p-4">
-        <Link href="/">
-          <Logo size="default" className="flex items-center justify-center py-2" />
-        </Link>
-      </div>
-      
-      <ScrollArea className="flex-grow overflow-auto py-6">
-        <nav className="flex flex-col space-y-1 px-3">
-          <Link 
-            href="/dashboard" 
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${selectedRole === "" ? "bg-slate-100 dark:bg-slate-800" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"} transition-all`}
-          >
-            <Home className="h-5 w-5" />
-            <span>Ana Sayfa</span>
-          </Link>
-          {roles.map((role) => (
-            <Link
-              key={role}
-              href={ROLE_ROUTES[role]?.path}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${selectedRole === role ? "bg-slate-100 dark:bg-slate-800" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"} transition-all`}
-            >
-              {ROLE_ROUTES[role]?.icon}
-              <span>{ROLE_ROUTES[role]?.label}</span>
-            </Link>
-          ))}
-          <Link 
-            href="/dashboard/settings" 
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
-          >
-            <Settings className="h-5 w-5" />
-            <span>Ayarlar</span>
-          </Link>
-          <Link 
-            href="/help" 
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
-          >
-            <CircleHelp className="h-5 w-5" />
-            <span>Yardım</span>
-          </Link>
-        </nav>
-      </ScrollArea>
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-          onClick={() => handleSignOut(router)}
-        >
-          <LogOut className="h-5 w-5" />
-          <span>Çıkış Yap</span>
-        </Button>
-      </div>
-    </aside>
-  );
-}
-
-// Dashboard Header bileşeni
-function DashboardHeader({ 
-  mobileMenuOpen, 
-  toggleMobileMenu,
-  onSignOut
-}: { 
-  mobileMenuOpen: boolean, 
-  toggleMobileMenu: () => void,
-  onSignOut: () => void
-}) {
-  return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
-      <div className="flex items-center justify-between h-16 px-4">
-        <div className="flex items-center lg:hidden">
-          <button
-            onClick={toggleMobileMenu}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label={mobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-            ) : (
-              <Menu className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-            )}
-          </button>
-          
-          <Link href="/dashboard" className="lg:hidden ml-2">
-            <Logo size="default" className="h-8" />
-          </Link>
-        </div>
-        
-        <div className="flex gap-2 ml-auto">
-          <DashboardActions />
-          <DashboardUserMenu onSignOut={onSignOut} />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-// Dashboard Mobil Menü bileşeni
-function DashboardMobileMenu({ 
-  roles, 
-  selectedRole, 
-  onRoleChange 
-}: { 
-  roles: string[], 
-  selectedRole: string, 
-  onRoleChange: (role: string) => void 
-}) {
-  return (
-    <div className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-y-auto">
-      <ScrollArea className="h-[calc(100vh-4rem)]">
-        <div className="py-4 px-4 space-y-6">
-          <div className="space-y-1">
-            <h3 className="px-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              Genel
-            </h3>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <Home className="h-5 w-5" />
-              <span>Ana Sayfa</span>
-            </Link>
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="px-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              Rolleriniz
-            </h3>
-            {roles.map((role) => (
-              <button
-                key={role}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                  selectedRole === role
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                )}
-                onClick={() => onRoleChange(role)}
-              >
-                {ROLE_ROUTES[role].icon}
-                <div className="flex flex-col items-start">
-                  <span>{ROLE_ROUTES[role].label}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {ROLE_ROUTES[role].description}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="px-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              Hızlı Erişim
-            </h3>
-            <Link
-              href="/dashboard/calendar"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <Calendar className="h-5 w-5" />
-              <span>Takvim</span>
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <Settings className="h-5 w-5" />
-              <span>Ayarlar</span>
-            </Link>
-            <Link
-              href="/help"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <CircleHelp className="h-5 w-5" />
-              <span>Yardım</span>
-            </Link>
-          </div>
-        </div>
-      </ScrollArea>
-    </div>
-  );
-}
-
-// Dashboard Aksiyonlar bileşeni
-function DashboardActions() {
-  return (
-    <div className="flex items-center gap-2">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button size="icon" variant="ghost" className="relative">
-            <Bell className="h-5 w-5" />
-            <Badge className="absolute top-0 right-0 h-2 w-2 p-0 bg-red-500" />
-            <span className="sr-only">Bildirimler</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Bildirimler</TooltipContent>
-      </Tooltip>
-    </div>
-  );
-}
-
-// Dashboard Kullanıcı Menüsü bileşeni
-function DashboardUserMenu({ onSignOut }: { onSignOut: () => void }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 h-9 rounded-full">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center text-white">
-            <User className="w-4 h-4" />
-          </div>
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link className="cursor-pointer" href="/dashboard">
-            <User className="w-4 h-4 mr-2" />
-            <span>Profil</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link className="cursor-pointer" href="/dashboard/roles">
-            <Dumbbell className="w-4 h-4 mr-2" />
-            <span>Roller</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link className="cursor-pointer" href="/dashboard/settings">
-            <Settings className="w-4 h-4 mr-2" />
-            <span>Ayarlar</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={onSignOut}
-          className="text-red-500 dark:text-red-400 cursor-pointer"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          <span>Çıkış Yap</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 // Yükleme durumu için iskelet bileşeni
 function DashboardLoadingSkeleton() {
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
+      {/* Desktop Sidebar Skeleton */}
       <div className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
         <div className="p-4">
           <Skeleton className="h-8 w-full mx-auto" />
@@ -456,15 +622,16 @@ function DashboardLoadingSkeleton() {
         </div>
       </div>
 
+      {/* Content Area Skeleton */}
       <div className="flex flex-col flex-grow">
+        {/* Mobile Header Skeleton */}
         <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between">
           <Skeleton className="h-8 w-8 lg:hidden" />
-          <div className="flex gap-2 ml-auto">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-          </div>
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-8 rounded-full" />
         </div>
 
+        {/* Main Content Skeleton */}
         <main className="flex-grow p-6">
           <div className="max-w-7xl mx-auto w-full space-y-6">
             <Skeleton className="h-10 w-2/3" />
@@ -484,39 +651,4 @@ function DashboardLoadingSkeleton() {
       </div>
     </div>
   );
-}
-
-// Yardımcı fonksiyonlar
-function handleSignOut(router: ReturnType<typeof useRouter>) {
-  supabase.auth.signOut().then(() => {
-    router.push("/");
-  }).catch((error) => {
-    console.error("Çıkış yapılırken hata:", error);
-  });
-}
-
-function handleRoleChange(
-  role: string,
-  setState: React.Dispatch<React.SetStateAction<{
-    roles: string[];
-    selectedRole: string;
-    loading: boolean;
-    mobileMenuOpen: boolean;
-  }>>,
-  router: ReturnType<typeof useRouter>
-) {
-  setState((prev) => ({ ...prev, selectedRole: role }));
-  router.push(ROLE_ROUTES[role].path);
-}
-
-function toggleMobileMenu(setState: React.Dispatch<React.SetStateAction<{
-  roles: string[];
-  selectedRole: string;
-  loading: boolean;
-  mobileMenuOpen: boolean;
-}>>) {
-  setState((prev) => ({
-    ...prev,
-    mobileMenuOpen: !prev.mobileMenuOpen,
-  }));
 }

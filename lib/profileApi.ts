@@ -1,4 +1,15 @@
 import { supabase } from "./supabaseClient";
+import type { AuthUser } from "@/types/supabase";
+
+// Kullanıcı profil veri tipi
+export interface UserData {
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email: string | null;
+  is_trainer: boolean;
+  is_gymmanager: boolean;
+}
 
 // Kullanıcının rollerini getirir (users tablosundan)
 export async function getUserRoles(userId: string): Promise<string[]> {
@@ -258,8 +269,29 @@ export async function getTrainerProfile(
   return data;
 }
 
+// Kullanıcının tüm profil bilgilerini getir
+export async function getUserProfile(userId: string): Promise<UserData | null> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('first_name, last_name, phone, email, is_trainer, is_gymmanager')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error("Kullanıcı bilgileri getirilemedi:", error);
+      return null;
+    }
+    
+    return data as UserData;
+  } catch (error) {
+    console.error("getUserProfile fonksiyonunda hata:", error);
+    return null;
+  }
+}
+
 // Kullanıcının oturum bilgisini ve rollerini getirir
-export async function getUserSessionWithRoles(): Promise<{ userId: string | null; roles: string[] }> {
+export async function getUserSessionWithRoles(): Promise<{ userId: string | null; roles: string[]; authUser?: AuthUser | null }> {
   try {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !session) {
@@ -267,8 +299,8 @@ export async function getUserSessionWithRoles(): Promise<{ userId: string | null
     }
     const user = session.user;
     const roles = await getUserRoles(user.id);
-    return { userId: user.id, roles };
+    return { userId: user.id, roles, authUser: session.user };
   } catch {
-    return { userId: null, roles: [] };
+    return { userId: null, roles: [], authUser: null };
   }
 }
