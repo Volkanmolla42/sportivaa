@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import AuthForm from "./AuthForm";
+import AuthForm from "../../components/Forms/AuthForm";
 
 export default function AuthPage() {
   return (

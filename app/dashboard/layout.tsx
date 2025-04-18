@@ -32,7 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import LogoLink from "@/components/home/Logo";
+import LogoLink from "@/components/Home/Logo";
 
 // Rol bilgilerinin tanımlanması
 interface RoleInfo {
