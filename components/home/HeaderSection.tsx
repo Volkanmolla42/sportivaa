@@ -202,7 +202,7 @@ export default function HeaderSection() {
             ) : (
               <div className="hidden sm:flex items-center space-x-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link href="?mode=login">
+                  <Link href="auth?mode=login">
                     Giriş Yap
                   </Link>
                 </Button>
@@ -294,12 +294,12 @@ export default function HeaderSection() {
                 {!userId && !isLoading && (
                   <div className="py-3 px-4 space-y-2">
                     <Button asChild className="w-full bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white">
-                      <Link href="/auth/register">
+                      <Link href="/auth?mode=register">
                         Kayıt Ol
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="w-full">
-                      <Link href="/auth/login">
+                      <Link href="/auth?mode=login">
                         Giriş Yap
                       </Link>
                     </Button>

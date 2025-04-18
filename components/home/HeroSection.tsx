@@ -114,7 +114,7 @@ export default function HeroSection() {
               ) : (
                 <>
                   <Button asChild size="lg" className="group relative shadow-xl bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-700 hover:to-teal-700 dark:from-indigo-600 dark:to-teal-600 text-white border-none overflow-hidden">
-                    <Link href="/auth/register" className="flex items-center gap-2 relative z-10">
+                    <Link href="/auth?mode=register" className="flex items-center gap-2 relative z-10">
                       Hemen Başla
                       <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-500 to-teal-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity"></span>

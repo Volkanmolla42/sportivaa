@@ -103,7 +103,7 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
           <span>
             Hesabın yok mu?{" "}
             <a
-              href="/auth/register"
+              href="/auth?mode=register"
               className="text-blue-600 dark:text-blue-400 underline"
             >
               Kayıt Ol
@@ -113,7 +113,7 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
           <span>
             Zaten hesabın var mı?{" "}
             <a
-              href="/auth/login"
+              href="/auth?mode=login"
               className="text-blue-600 dark:text-blue-400 underline"
             >
               Giriş Yap

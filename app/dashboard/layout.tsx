@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       try {
         if (!userId) {
           setState((prev) => ({ ...prev, loading: false }));
-          router.push("/auth/login");
+          router.push("/auth?mode=login");
           return;
         }
 
@@ -192,7 +192,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           asChild
           className="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white border-none"
         >
-          <Link href="/auth/login">Giriş Yap</Link>
+          <Link href="/auth?mode=login">Giriş Yap</Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/">Ana Sayfaya Dön</Link>

@@ -56,7 +56,7 @@ export default function ProfilePage() {
   }, [router]);
 
   function handleLogout() {
-    supabase.auth.signOut().then(() => router.replace("/auth/login"));
+    supabase.auth.signOut().then(() => router.replace("/auth?mode=login"));
   }
 
   if (loading) {
@@ -96,7 +96,7 @@ export default function ProfilePage() {
           </p>
           <div className="mt-6 flex justify-center">
             <Link
-              href="/auth/login"
+              href="/auth?mode=login"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 transition shadow-md flex items-center gap-2"
             >
               <LogOut className="h-5 w-5" />
