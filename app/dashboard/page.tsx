@@ -6,8 +6,20 @@ import { getUserName, getUserGyms, getGymsByManager, getTrainerProfile } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowRight, Calendar, Dumbbell, Users, Building2, Medal } from "lucide-react";
+import { 
+  ArrowRight, 
+  Calendar, 
+  Dumbbell, 
+  Users, 
+  Building2, 
+  TrendingUp, 
+  BarChart,
+  CheckCircle2,
+  Clock
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 // Tip tanımlamaları
 type MemberGym = {
@@ -105,9 +117,24 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <WelcomeHeader userName={userName} />
-      <StatsSection userData={userData} />
-      <RolesSection />
-      <ActivityCard />
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
+          <TabsTrigger value="roles">Rollerim</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <StatsSection userData={userData} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProgressPanel />
+            <RecentActivitiesPanel />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="roles" className="space-y-6">
+          <RolesSection />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -115,11 +142,13 @@ export default function DashboardPage() {
 // Hoşgeldin başlığı bileşeni
 function WelcomeHeader({ userName }: { userName: string }) {
   return (
-    <div>
-      <h1 className="text-3xl font-bold tracking-tight mb-2">Hoş geldin, {userName}!</h1>
-      <p className="text-slate-600 dark:text-slate-400">
-        Sportiva platformunda kontrol paneline erişim sağladın. 
-        Yandaki menüden farklı rollere erişim sağlayabilirsin.
+    <div className="space-y-2">
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        Hoş geldin, {userName}!
+      </h1>
+      <p className="text-slate-600 dark:text-slate-400 max-w-3xl">
+        Sportiva platformunun kontrol panelinde her şeyi tek yerden yönetebilirsin. 
+        Salonlar, antrenmanlar ve daha fazlasına hızlıca erişebilirsin.
       </p>
     </div>
   );
@@ -128,7 +157,7 @@ function WelcomeHeader({ userName }: { userName: string }) {
 // İstatistikler bölümü
 function StatsSection({ userData }: { userData: UserData }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <StatsCard 
         title="Üye Olduğun Salon"
         value={userData.memberGyms.length.toString()}
@@ -146,21 +175,138 @@ function StatsSection({ userData }: { userData: UserData }) {
       />
       
       <StatsCard 
-        title="Deneyim"
-        value={userData.trainerProfile?.experience?.toString() || "0"}
+        title="Antrenör Deneyimi"
+        value={userData.trainerProfile?.experience ? userData.trainerProfile.experience.toString() : "0"}
         suffix="yıl"
-        icon={<Medal className="w-4 h-4" />}
-        description="Eğitmen deneyimi"
-        trend="neutral"
+        icon={<Dumbbell className="w-4 h-4" />}
+        description="Eğitmenlik tecrübesi"
+        trend="up"
       />
       
       <StatsCard 
-        title="Etkinlikler"
-        value="0"
+        title="Aktif Randevular"
+        value="2"
         icon={<Calendar className="w-4 h-4" />}
-        description="Planlanan randevular"
-        trend="neutral"
+        description="Yaklaşan randevularınız"
+        trend="up"
       />
+    </div>
+  );
+}
+
+// İlerleme paneli
+function ProgressPanel() {
+  return (
+    <Card className="border-slate-200 dark:border-slate-800">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-semibold">Haftalık İlerleme</CardTitle>
+        <CardDescription>Hedeflerinize doğru ilerleyişiniz</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Antrenman Tamamlama</span>
+            <span className="text-slate-500 dark:text-slate-400">7/10</span>
+          </div>
+          <Progress value={70} className="h-2" />
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Kalori Hedefi</span>
+            <span className="text-slate-500 dark:text-slate-400">2100/3000</span>
+          </div>
+          <Progress value={70} className="h-2" />
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Protein Alımı</span>
+            <span className="text-slate-500 dark:text-slate-400">120/150g</span>
+          </div>
+          <Progress value={80} className="h-2" />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button variant="outline" className="w-full gap-1 group" asChild>
+          <Link href="/dashboard/stats">
+            Tüm İstatistikleri Görüntüle
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+// Son aktiviteler paneli
+function RecentActivitiesPanel() {
+  return (
+    <Card className="border-slate-200 dark:border-slate-800">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-semibold">Son Aktiviteler</CardTitle>
+        <CardDescription>Son 7 gün içindeki etkinlikleriniz</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <ActivityItem 
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+            title="Antrenmana Katıldınız"
+            description="Salonda 60 dakikalık güç antrenmanı"
+            time="2 saat önce"
+          />
+          
+          <ActivityItem 
+            icon={<Users className="h-4 w-4 text-blue-500" />}
+            title="Yeni Üye"
+            description="Salonunuza yeni bir üye katıldı"
+            time="Dün"
+          />
+          
+          <ActivityItem 
+            icon={<Clock className="h-4 w-4 text-amber-500" />}
+            title="Randevu Onaylandı"
+            description="23 Nisan Salı, 15:00 - 16:00"
+            time="2 gün önce"
+          />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button variant="outline" className="w-full gap-1 group" asChild>
+          <Link href="/dashboard/activities">
+            Tüm Aktiviteleri Görüntüle
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+// Aktivite öğesi
+function ActivityItem({ 
+  icon, 
+  title, 
+  description, 
+  time 
+}: { 
+  icon: React.ReactNode, 
+  title: string, 
+  description: string, 
+  time: string 
+}) {
+  return (
+    <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+      <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800">
+        {icon}
+      </div>
+      <div className="flex-grow min-w-0">
+        <p className="font-medium text-slate-900 dark:text-slate-100">{title}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{description}</p>
+      </div>
+      <div className="text-xs text-slate-500 dark:text-slate-500 whitespace-nowrap">
+        {time}
+      </div>
     </div>
   );
 }
@@ -171,69 +317,34 @@ function RolesSection() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <RoleCard 
         title="Üye Paneli"
-        description="Üyelik bilgilerinizi, antreman programlarınızı ve randevularınızı yönetin."
+        description="Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin."
         icon={<Users className="w-5 h-5" />}
         href="/dashboard/member"
-        bgClass="from-blue-400 to-blue-600"
+        bgClass="from-blue-500 to-cyan-500"
         iconClass="bg-blue-500"
         buttonText="Üye Paneline Git"
       />
       
       <RoleCard 
         title="Eğitmen Paneli"
-        description="Öğrencilerinizi, antrenman programlarını ve randevularınızı yönetin."
+        description="Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin."
         icon={<Dumbbell className="w-5 h-5" />}
         href="/dashboard/trainer"
-        bgClass="from-emerald-400 to-emerald-600"
-        iconClass="bg-emerald-500"
+        bgClass="from-amber-500 to-orange-500"
+        iconClass="bg-amber-500"
         buttonText="Eğitmen Paneline Git"
       />
       
       <RoleCard 
-        title="Salon Yönetici Paneli"
-        description="Spor salonunuzu, üyelerinizi, eğitmenlerinizi ve abonelik planlarını yönetin."
+        title="Salon Yöneticisi"
+        description="Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin."
         icon={<Building2 className="w-5 h-5" />}
         href="/dashboard/gymmanager"
-        bgClass="from-violet-400 to-violet-600"
-        iconClass="bg-violet-500"
+        bgClass="from-emerald-500 to-green-500"
+        iconClass="bg-emerald-500"
         buttonText="Yönetici Paneline Git"
       />
     </div>
-  );
-}
-
-// Aktivite Kartı
-function ActivityCard() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Son Aktiviteler</CardTitle>
-        <CardDescription>
-          Platformda yapılan son işlemler ve bildirimler
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="border-l-2 border-teal-500 pl-4 py-1">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Sportiva platformuna hoş geldiniz! Burada spor salonu, eğitmen ve üye olarak tüm işlemlerinizi yönetebilirsiniz.
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-              Bugün
-            </p>
-          </div>
-          
-          <div className="border-l-2 border-slate-300 dark:border-slate-700 pl-4 py-1">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Profil bilgilerinizi ve rollerinizi güncelleyerek platform özelliklerini daha etkin kullanabilirsiniz.
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-              1 gün önce
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -259,20 +370,16 @@ function DashboardSkeleton() {
         <Skeleton className="h-10 w-2/3 mb-2" />
         <Skeleton className="h-5 w-full max-w-md" />
       </div>
-      
+      <Skeleton className="h-10 w-64 rounded-lg" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-32 rounded-xl" />
         ))}
       </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-64 rounded-xl" />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Skeleton className="h-80 rounded-xl" />
+        <Skeleton className="h-80 rounded-xl" />
       </div>
-      
-      <Skeleton className="h-64 rounded-xl" />
     </div>
   );
 }
@@ -293,6 +400,12 @@ function StatsCard({
   description: string;
   trend?: "up" | "down" | "neutral";
 }) {
+  const trendIcon = {
+    up: <TrendingUp className="h-3 w-3" />,
+    down: <TrendingUp className="h-3 w-3 transform rotate-180" />,
+    neutral: <BarChart className="h-3 w-3" />
+  }[trend];
+  
   const trendColor = {
     up: "text-emerald-500",
     down: "text-red-500",
@@ -300,7 +413,7 @@ function StatsCard({
   }[trend];
     
   return (
-    <Card>
+    <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -312,12 +425,13 @@ function StatsCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">
+        <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
           {value}
           {suffix && <span className="text-sm font-normal ml-1">{suffix}</span>}
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-          <span className={trendColor}>{description}</span>
+        <p className={`text-xs mt-1 flex items-center gap-1 ${trendColor}`}>
+          {trendIcon}
+          <span>{description}</span>
         </p>
       </CardContent>
     </Card>
@@ -343,7 +457,7 @@ function RoleCard({
   buttonText: string;
 }) {
   return (
-    <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
+    <Card className="overflow-hidden transition-all duration-200 hover:shadow-md border-slate-200 dark:border-slate-800">
       <div className={`h-2 bg-gradient-to-r ${bgClass}`}></div>
       <CardHeader>
         <div className="flex items-center gap-3">

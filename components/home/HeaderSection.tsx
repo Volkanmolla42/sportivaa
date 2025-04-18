@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import LogoLink from "./Logo";
+import Logo from "./Logo";
 
 // Ana menü öğeleri
 const menuItems = [
@@ -122,7 +122,9 @@ export default function HeaderSection() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <LogoLink size="large" />
+          <Link href="/">
+            <Logo size="default" />
+          </Link>
 
           {/* Masaüstü Navigasyon */}
           <nav className="hidden md:flex items-center space-x-1">

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 
 function Logo({ size = "default", className = "" }) {
@@ -30,13 +29,5 @@ function Logo({ size = "default", className = "" }) {
   );
 }
 
-// Logo with link functionality
-function LogoLink({ href = "/", size = "default", className = "" }) {
-  return (
-    <Link href={href} className={`inline-block ${className}`}>
-      <Logo size={size} />
-    </Link>
-  );
-}
-
-export default LogoLink;
+// LogoLink bileşeni kaldırıldı, sadece Logo fonksiyonel bileşeni export ediliyor
+export default Logo;

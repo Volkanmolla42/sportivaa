@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AuthModeImage from "../../app/auth/AuthModeImage";
-import LogoLink from "@/components/Home/Logo";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { Loader2 } from "lucide-react";
+import Logo from "../home/Logo";
 
 export default function AuthForm() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function AuthForm() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) router.push("/profile");
+      if (session) router.push("/dashboard");
     }
     checkSession();
   }, [router]);
@@ -45,13 +45,13 @@ export default function AuthForm() {
           password,
         });
         if (error) throw error;
-        router.push("/profile");
+        router.push("dashboard");
       } else {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         const { user } = data;
         if (user) {
-          router.push("/profile");
+          router.push("dashboard");
         }
       }
     } catch (err: unknown) {
@@ -69,7 +69,9 @@ export default function AuthForm() {
     <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-900 dark:to-indigo-950 text-gray-900 dark:text-gray-100">
       <div className="fixed inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none"></div>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center">
-        <LogoLink size="large" />
+        <Link href="/">
+          <Logo size="large" />
+        </Link>
         <div className="relative w-full max-w-4xl">
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
