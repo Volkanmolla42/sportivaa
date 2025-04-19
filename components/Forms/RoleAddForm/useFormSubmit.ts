@@ -39,14 +39,14 @@ export function useFormSubmit({ user, refresh }: UseFormSubmitProps) {
         await dataService.createGymManagerProfile(user.id);
 
         // Then create a gym with the provided information
-        const gymId = await dataService.createGym({
+        await dataService.createGym({
           name: data.gymName,
           city: data.city,
           owner_user_id: user.id
         });
 
-        // Add the user as a member of their own gym
-        await dataService.addUserToGym(user.id, gymId, "owner");
+        // Not adding the user to gym_users table as per requirements
+        // Salon yöneticisi sadece is_gymmanager=true olmalı ve salon bilgileri kaydedilmeli
       }
 
       setSuccess(true);
