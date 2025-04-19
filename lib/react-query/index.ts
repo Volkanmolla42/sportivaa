@@ -1,47 +1,15 @@
-"use client";
+// Re-export the ReactQueryProvider from provider.tsx
+export { ReactQueryProvider } from "./provider";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import React, { useState } from "react";
-
-export function ReactQueryProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000, // 1 minute
-            refetchOnWindowFocus: false,
-            retry: 1,
-          },
-        },
-      })
-  );
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  );
-}
-
-// Utility function to create a query key
+// Utility function to create a query key factory
 export function createQueryKey<T extends string>(baseKey: T) {
-  const queryKey = {
+  return {
     all: [baseKey] as const,
-    lists: function() { return [...this.all, "list"] as const },
-    list: function(filters: Record<string, unknown>) {
-      return [...this.lists(), { filters }] as const
-    },
-    details: function() { return [...this.all, "detail"] as const },
-    detail: function(id: string) { return [...this.details(), id] as const },
+    lists: () => [baseKey, "list"] as const,
+    list: (filters: Record<string, unknown>) => [baseKey, "list", filters] as const,
+    details: () => [baseKey, "detail"] as const,
+    detail: (id: string) => [baseKey, "detail", id] as const,
   };
-  return queryKey;
 }
 
 // Query keys for different entities
@@ -53,3 +21,4 @@ export const queryKeys = {
   workouts: createQueryKey("workouts"),
   appointments: createQueryKey("appointments"),
 };
+
