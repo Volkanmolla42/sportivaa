@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import RoleAddForm from "@/components/Forms/RoleAddForm";
+import RoleAddFormEnhanced from "@/components/Forms/RoleAddFormEnhanced";
 import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
 
 /**
@@ -18,7 +18,7 @@ export default function RoleAddPage() {
     requiredRole: "Member",
     Component: () => (
       <div className="max-w-md mx-auto">
-        <RoleAddForm />
+        <RoleAddFormEnhanced />
       </div>
     ),
     navigateTo: "/dashboard"

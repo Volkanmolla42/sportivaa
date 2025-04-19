@@ -63,14 +63,10 @@ export const dataService = {
   async createGym({
     name,
     city,
-    address,
-    phone,
     owner_user_id,
   }: {
     name: string;
     city: string;
-    address: string;
-    phone: string;
     owner_user_id: string;
   }): Promise<string> {
     try {
@@ -79,8 +75,6 @@ export const dataService = {
         .insert({
           name,
           city,
-          address,
-          phone,
           owner_user_id,
         })
         .select("id")
