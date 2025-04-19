@@ -2,17 +2,20 @@
 import { useEffect, useState, useCallback } from "react";
 import { getUserName, getTrainerProfile } from "@/contexts/AuthContext";
 import type { User } from "@/types/supabase";
-import { TrainerRegisterForm } from "@/components/Forms";
+import type { BasicUser } from "@/contexts/AuthContext";
+import WelcomeMessage from "./WelcomeMessage";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import TrainerRegisterForm from "@/components/Forms/TrainerRegisterForm";
 
 // Küçük, tekrar kullanılabilir bileşenler
-const TrainerWelcome = ({ user }: { user: User }) => (
-  <div className="mb-6 text-lg">
-    Hoş geldin,{" "}
-    <span className="font-medium">
-      {user.first_name} {user.last_name}
-    </span>
-    !
+const TrainerWelcome = ({ user }: { user: User | BasicUser }) => (
+  <div className="mb-6">
+    <WelcomeMessage
+      firstName={user.first_name || ""}
+      lastName={user.last_name || ""}
+      role="trainer"
+    />
   </div>
 );
 
@@ -47,7 +50,7 @@ const TrainerFutureFeatures = () => (
 
 export default function DashboardTrainer({ userId }: { userId: string }) {
   const [state, setState] = useState<{
-    user: User | null;
+    user: (User & BasicUser) | null;
     trainerProfile: { experience: number; specialty: string } | null;
     isLoading: boolean;
     error: string | null;
@@ -66,7 +69,14 @@ export default function DashboardTrainer({ userId }: { userId: string }) {
         getTrainerProfile(userId),
       ]);
       setState({
-        user: userData as User,
+        user: {
+          ...userData,
+          is_trainer: false,
+          is_gymmanager: false,
+          created_at: "",
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+        },
         trainerProfile: trainerData,
         isLoading: false,
         error: null,

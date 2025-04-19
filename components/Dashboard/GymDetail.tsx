@@ -18,7 +18,12 @@ export default function GymDetail({ gym, onBack }: GymDetailProps) {
     async function fetchMembers() {
       setLoading(true);
       const data = await getGymMembers(gym.id);
-      setMembers(data);
+      setMembers(data.map((m) => ({
+  id: m.id,
+  first_name: m.first_name ?? '',
+  last_name: m.last_name ?? '',
+  email: m.email ?? '',
+})));
       setLoading(false);
     }
     fetchMembers();
@@ -57,7 +62,12 @@ export default function GymDetail({ gym, onBack }: GymDetailProps) {
         onAdded={() => {
           setLoading(true);
           getGymMembers(gym.id)
-            .then(setMembers)
+            .then((data) => setMembers(data.map((m) => ({
+              id: m.id,
+              first_name: m.first_name ?? '',
+              last_name: m.last_name ?? '',
+              email: m.email ?? '',
+            }))))
             .finally(() => setLoading(false));
         }}
       />

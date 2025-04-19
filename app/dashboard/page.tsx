@@ -1,20 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUserName, getUserGyms, getGymsByManager, getTrainerProfile, useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  getUserName,
+  getUserGyms,
+  getGymsByManager,
+  getTrainerProfile,
+  useAuth,
+} from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
+import WelcomeMessage from "@/components/Dashboard/WelcomeMessage";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { 
-  ArrowRight, 
-  Calendar, 
-  Dumbbell, 
-  Users, 
-  Building2, 
-  TrendingUp, 
+import {
+  ArrowRight,
+  Calendar,
+  Dumbbell,
+  Users,
+  Building2,
+  TrendingUp,
   BarChart,
   CheckCircle2,
-  Clock
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,7 +65,8 @@ type UserData = {
 
 // Ana bileşen
 export default function DashboardPage() {
-  const { userId, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const userId = user?.id;
   const [userData, setUserData] = useState<UserData>({
     firstName: "",
     lastName: "",
@@ -58,24 +74,74 @@ export default function DashboardPage() {
     ownedGyms: [],
     trainerProfile: null,
     loading: true,
-    error: null
+    error: null,
   });
 
   // Verileri getir
   useEffect(() => {
     if (!userId) return;
-    
+
     const fetchUserData = async () => {
       try {
-        setUserData(prev => ({ ...prev, loading: true, error: null }));
-        
-        const [nameData, memberGyms, ownedGyms, trainerProfile] = await Promise.all([
-          getUserName(userId),
-          getUserGyms(userId),
-          getGymsByManager(userId),
-          getTrainerProfile(userId)
-        ]);
-        
+        setUserData((prev) => ({ ...prev, loading: true, error: null }));
+
+        // Önce localStorage'da bekleyen kullanıcı verisi var mı kontrol et
+        const pendingUserDataStr = localStorage.getItem("pendingUserData");
+        if (pendingUserDataStr) {
+          try {
+            const pendingUserData = JSON.parse(pendingUserDataStr);
+            console.log(
+              "localStorage'da bekleyen kullanıcı verisi bulundu:",
+              pendingUserData
+            );
+
+            // Kullanıcı ID'si eşleşiyor mu kontrol et
+            if (pendingUserData.id === userId) {
+              console.log(
+                "Bekleyen kullanıcı verisi users tablosuna kaydediliyor..."
+              );
+
+              // Veritabanına kaydetmeyi dene
+              const { error: insertError } = await supabase
+                .from("users")
+                .upsert([
+                  {
+                    id: pendingUserData.id,
+                    first_name: pendingUserData.first_name,
+                    last_name: pendingUserData.last_name,
+                    email: pendingUserData.email,
+                    is_trainer: false,
+                    is_gymmanager: false,
+                  },
+                ]);
+
+              if (insertError) {
+                console.error(
+                  "Bekleyen kullanıcı verisi kaydedilemedi:",
+                  insertError
+                );
+              } else {
+                console.log("Bekleyen kullanıcı verisi başarıyla kaydedildi");
+                localStorage.removeItem("pendingUserData");
+              }
+            }
+          } catch (parseError) {
+            console.error(
+              "localStorage'daki veri ayrıştırılamadı:",
+              parseError
+            );
+            localStorage.removeItem("pendingUserData");
+          }
+        }
+
+        const [nameData, memberGyms, ownedGyms, trainerProfile] =
+          await Promise.all([
+            getUserName(userId),
+            getUserGyms(userId),
+            getGymsByManager(userId),
+            getTrainerProfile(userId),
+          ]);
+
         setUserData({
           firstName: nameData.first_name || "",
           lastName: nameData.last_name || "",
@@ -83,21 +149,22 @@ export default function DashboardPage() {
           ownedGyms,
           trainerProfile,
           loading: false,
-          error: null
+          error: null,
         });
       } catch (error) {
         console.error("Kullanıcı verileri alınırken hata:", error);
-        setUserData(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: "Veriler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin." 
+        setUserData((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            "Veriler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.",
         }));
       }
     };
-    
+
     fetchUserData();
   }, [userId]);
-  
+
   // Yükleme durumu
   if (authLoading || userData.loading) {
     return <DashboardSkeleton />;
@@ -107,12 +174,28 @@ export default function DashboardPage() {
   if (userData.error) {
     return <ErrorDisplay message={userData.error} />;
   }
-  
+
   // Kullanıcı adını oluştur
-  const userName = userData.firstName && userData.lastName 
-    ? `${userData.firstName} ${userData.lastName}` 
-    : "Sporcu";
-  
+  console.log("Dashboard userData:", userData); // Debug için
+
+  const hasFirstName =
+    userData.firstName &&
+    typeof userData.firstName === "string" &&
+    userData.firstName.trim().length > 0;
+  const hasLastName =
+    userData.lastName &&
+    typeof userData.lastName === "string" &&
+    userData.lastName.trim().length > 0;
+
+  let userName = "Sporcu";
+  if (hasFirstName && hasLastName) {
+    userName = `${userData.firstName} ${userData.lastName}`;
+  } else if (hasFirstName) {
+    userName = userData.firstName;
+  } else if (hasLastName) {
+    userName = userData.lastName;
+  }
+
   return (
     <div className="space-y-8">
       <WelcomeHeader userName={userName} />
@@ -121,7 +204,7 @@ export default function DashboardPage() {
           <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
           <TabsTrigger value="roles">Rollerim</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="space-y-6">
           <StatsSection userData={userData} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -129,7 +212,7 @@ export default function DashboardPage() {
             <RecentActivitiesPanel />
           </div>
         </TabsContent>
-        
+
         <TabsContent value="roles" className="space-y-6">
           <RolesSection />
         </TabsContent>
@@ -140,15 +223,26 @@ export default function DashboardPage() {
 
 // Hoşgeldin başlığı bileşeni
 function WelcomeHeader({ userName }: { userName: string }) {
+  // userName'i first ve last name olarak bölüyoruz
+  const nameParts = userName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
   return (
     <div className="space-y-2">
       <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-        Hoş geldin, {userName}!
+        <WelcomeMessage
+          firstName={firstName}
+          lastName={lastName}
+          role="default"
+        >
+          <p className="text-slate-600 dark:text-slate-400 max-w-3xl mt-2 text-base font-normal">
+            Sportiva platformunun kontrol panelinde her şeyi tek yerden
+            yönetebilirsin. Salonlar, antrenmanlar ve daha fazlasına hızlıca
+            erişebilirsin.
+          </p>
+        </WelcomeMessage>
       </h1>
-      <p className="text-slate-600 dark:text-slate-400 max-w-3xl">
-        Sportiva platformunun kontrol panelinde her şeyi tek yerden yönetebilirsin. 
-        Salonlar, antrenmanlar ve daha fazlasına hızlıca erişebilirsin.
-      </p>
     </div>
   );
 }
@@ -157,32 +251,36 @@ function WelcomeHeader({ userName }: { userName: string }) {
 function StatsSection({ userData }: { userData: UserData }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <StatsCard 
+      <StatsCard
         title="Üye Olduğun Salon"
         value={userData.memberGyms.length.toString()}
         icon={<Building2 className="w-4 h-4" />}
         description="Kayıtlı olduğun salon sayısı"
         trend="neutral"
       />
-      
-      <StatsCard 
+
+      <StatsCard
         title="Yönettiğin Salon"
         value={userData.ownedGyms.length.toString()}
         icon={<Users className="w-4 h-4" />}
         description="Yönetici olduğun salon sayısı"
         trend="neutral"
       />
-      
-      <StatsCard 
+
+      <StatsCard
         title="Antrenör Deneyimi"
-        value={userData.trainerProfile?.experience ? userData.trainerProfile.experience.toString() : "0"}
+        value={
+          userData.trainerProfile?.experience
+            ? userData.trainerProfile.experience.toString()
+            : "0"
+        }
         suffix="yıl"
         icon={<Dumbbell className="w-4 h-4" />}
         description="Eğitmenlik tecrübesi"
         trend="up"
       />
-      
-      <StatsCard 
+
+      <StatsCard
         title="Aktif Randevular"
         value="2"
         icon={<Calendar className="w-4 h-4" />}
@@ -198,29 +296,39 @@ function ProgressPanel() {
   return (
     <Card className="border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-semibold">Haftalık İlerleme</CardTitle>
+        <CardTitle className="text-xl font-semibold">
+          Haftalık İlerleme
+        </CardTitle>
         <CardDescription>Hedeflerinize doğru ilerleyişiniz</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="font-medium text-slate-700 dark:text-slate-300">Antrenman Tamamlama</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              Antrenman Tamamlama
+            </span>
             <span className="text-slate-500 dark:text-slate-400">7/10</span>
           </div>
           <Progress value={70} className="h-2" />
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="font-medium text-slate-700 dark:text-slate-300">Kalori Hedefi</span>
-            <span className="text-slate-500 dark:text-slate-400">2100/3000</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              Kalori Hedefi
+            </span>
+            <span className="text-slate-500 dark:text-slate-400">
+              2100/3000
+            </span>
           </div>
           <Progress value={70} className="h-2" />
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="font-medium text-slate-700 dark:text-slate-300">Protein Alımı</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              Protein Alımı
+            </span>
             <span className="text-slate-500 dark:text-slate-400">120/150g</span>
           </div>
           <Progress value={80} className="h-2" />
@@ -248,21 +356,21 @@ function RecentActivitiesPanel() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <ActivityItem 
+          <ActivityItem
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
             title="Antrenmana Katıldınız"
             description="Salonda 60 dakikalık güç antrenmanı"
             time="2 saat önce"
           />
-          
-          <ActivityItem 
+
+          <ActivityItem
             icon={<Users className="h-4 w-4 text-blue-500" />}
             title="Yeni Üye"
             description="Salonunuza yeni bir üye katıldı"
             time="Dün"
           />
-          
-          <ActivityItem 
+
+          <ActivityItem
             icon={<Clock className="h-4 w-4 text-amber-500" />}
             title="Randevu Onaylandı"
             description="23 Nisan Salı, 15:00 - 16:00"
@@ -283,16 +391,16 @@ function RecentActivitiesPanel() {
 }
 
 // Aktivite öğesi
-function ActivityItem({ 
-  icon, 
-  title, 
-  description, 
-  time 
-}: { 
-  icon: React.ReactNode, 
-  title: string, 
-  description: string, 
-  time: string 
+function ActivityItem({
+  icon,
+  title,
+  description,
+  time,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  time: string;
 }) {
   return (
     <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
@@ -300,8 +408,12 @@ function ActivityItem({
         {icon}
       </div>
       <div className="flex-grow min-w-0">
-        <p className="font-medium text-slate-900 dark:text-slate-100">{title}</p>
-        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{description}</p>
+        <p className="font-medium text-slate-900 dark:text-slate-100">
+          {title}
+        </p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+          {description}
+        </p>
       </div>
       <div className="text-xs text-slate-500 dark:text-slate-500 whitespace-nowrap">
         {time}
@@ -314,7 +426,7 @@ function ActivityItem({
 function RolesSection() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <RoleCard 
+      <RoleCard
         title="Üye Paneli"
         description="Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin."
         icon={<Users className="w-5 h-5" />}
@@ -323,8 +435,8 @@ function RolesSection() {
         iconClass="bg-blue-500"
         buttonText="Üye Paneline Git"
       />
-      
-      <RoleCard 
+
+      <RoleCard
         title="Eğitmen Paneli"
         description="Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin."
         icon={<Dumbbell className="w-5 h-5" />}
@@ -333,8 +445,8 @@ function RolesSection() {
         iconClass="bg-amber-500"
         buttonText="Eğitmen Paneline Git"
       />
-      
-      <RoleCard 
+
+      <RoleCard
         title="Salon Yöneticisi"
         description="Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin."
         icon={<Building2 className="w-5 h-5" />}
@@ -354,9 +466,7 @@ function ErrorDisplay({ message }: { message: string }) {
       <div className="text-red-500 bg-red-50 dark:bg-red-900/20 dark:text-red-300 p-4 rounded-lg mb-4">
         <p>{message}</p>
       </div>
-      <Button onClick={() => window.location.reload()}>
-        Yeniden Dene
-      </Button>
+      <Button onClick={() => window.location.reload()}>Yeniden Dene</Button>
     </div>
   );
 }
@@ -364,34 +474,53 @@ function ErrorDisplay({ message }: { message: string }) {
 // Yükleme iskeletleri
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8">
-      <div>
-        <Skeleton className="h-10 w-2/3 mb-2" />
-        <Skeleton className="h-5 w-full max-w-md" />
+    <div className="min-h-screen flex flex-col">
+      {/* Yükleme üst katmanı */}
+      <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col items-center gap-4 max-w-md w-full">
+          <div className="w-16 h-16 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-100 dark:border-blue-900"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-blue-500 dark:border-blue-400 border-t-transparent animate-spin"></div>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            Yükleniyor...
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 text-center">
+            Sportiva dashboard yükleniyor. Lütfen bekleyin.
+          </p>
+        </div>
       </div>
-      <Skeleton className="h-10 w-64 rounded-lg" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Skeleton className="h-80 rounded-xl" />
-        <Skeleton className="h-80 rounded-xl" />
+
+      {/* Arka plan iskelet */}
+      <div className="space-y-8 opacity-20">
+        <div>
+          <Skeleton className="h-10 w-2/3 mb-2" />
+          <Skeleton className="h-5 w-full max-w-md" />
+        </div>
+        <Skeleton className="h-10 w-64 rounded-lg" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+        </div>
       </div>
     </div>
   );
 }
 
 // İstatistik Kartı
-function StatsCard({ 
-  title, 
-  value, 
-  suffix = "", 
-  icon, 
-  description, 
-  trend = "up" 
-}: { 
+function StatsCard({
+  title,
+  value,
+  suffix = "",
+  icon,
+  description,
+  trend = "up",
+}: {
   title: string;
   value: string;
   suffix?: string;
@@ -402,15 +531,15 @@ function StatsCard({
   const trendIcon = {
     up: <TrendingUp className="h-3 w-3" />,
     down: <TrendingUp className="h-3 w-3 transform rotate-180" />,
-    neutral: <BarChart className="h-3 w-3" />
+    neutral: <BarChart className="h-3 w-3" />,
   }[trend];
-  
+
   const trendColor = {
     up: "text-emerald-500",
     down: "text-red-500",
-    neutral: "text-slate-500"
+    neutral: "text-slate-500",
   }[trend];
-    
+
   return (
     <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
       <CardHeader className="pb-2">
@@ -438,15 +567,15 @@ function StatsCard({
 }
 
 // Rol Kartı
-function RoleCard({ 
-  title, 
-  description, 
-  icon, 
-  href, 
-  bgClass, 
+function RoleCard({
+  title,
+  description,
+  icon,
+  href,
+  bgClass,
   iconClass,
-  buttonText
-}: { 
+  buttonText,
+}: {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -460,22 +589,23 @@ function RoleCard({
       <div className={`h-2 bg-gradient-to-r ${bgClass}`}></div>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${iconClass} text-white`}>
-            {icon}
-          </div>
+          <div className={`p-2 rounded-lg ${iconClass} text-white`}>{icon}</div>
           <CardTitle>{title}</CardTitle>
         </div>
-        <CardDescription>
-          {description}
-        </CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className={`h-24 bg-gradient-to-r ${bgClass} opacity-10 rounded-lg flex items-center justify-center`}>
+        <div
+          className={`h-24 bg-gradient-to-r ${bgClass} opacity-10 rounded-lg flex items-center justify-center`}
+        >
           {icon}
         </div>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full gap-1 group transition-all duration-200">
+        <Button
+          asChild
+          className="w-full gap-1 group transition-all duration-200"
+        >
           <Link href={href}>
             {buttonText}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

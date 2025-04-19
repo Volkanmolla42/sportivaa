@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserRoles } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle, ArrowLeft, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -18,7 +24,7 @@ type PageState = {
 
 // HOC özellikleri
 type WithRoleAccessProps = {
-  requiredRole: string;
+  requiredRole: "Member" | "Trainer" | "GymManager";
   Component: React.ComponentType<{ userId: string }>;
   navigateTo: string;
 };
@@ -33,15 +39,19 @@ type WithRoleAccessProps = {
 export function withRoleAccess({
   requiredRole,
   Component,
-  navigateTo
+  navigateTo,
 }: WithRoleAccessProps) {
   // Rol kontrollü bileşen
-  return function RoleProtectedComponent({ userId }: { userId?: string | null }) {
+  return function RoleProtectedComponent({
+    userId,
+  }: {
+    userId?: string | null;
+  }) {
     const { isLoading: authLoading } = useAuth();
     const [state, setState] = useState<PageState>({
       hasRole: false,
       loading: true,
-      error: null
+      error: null,
     });
 
     // Rol kontrolü
@@ -50,19 +60,22 @@ export function withRoleAccess({
         if (!userId) return;
 
         try {
-          setState(prev => ({ ...prev, loading: true, error: null }));
+          setState((prev) => ({ ...prev, loading: true, error: null }));
           const roles = await getUserRoles(userId);
+          const hasRole = Array.isArray(roles)
+            ? roles.includes(requiredRole)
+            : false;
           setState({
-            hasRole: roles.includes(requiredRole),
+            hasRole,
             loading: false,
-            error: null
+            error: null,
           });
         } catch (error) {
           console.error("Rol bilgileri alınırken hata:", error);
           setState({
             hasRole: false,
             loading: false,
-            error: "Rol bilgileri yüklenirken bir hata oluştu."
+            error: "Rol bilgileri yüklenirken bir hata oluştu.",
           });
         }
       };
@@ -82,15 +95,20 @@ export function withRoleAccess({
 
     // Giriş yapılmadıysa
     if (!userId) {
-      return <UnauthorizedState message="Lütfen önce giriş yapın." navigateTo={navigateTo} />;
+      return (
+        <UnauthorizedState
+          message="Lütfen önce giriş yapın."
+          navigateTo={navigateTo}
+        />
+      );
     }
 
     // Yetkisiz erişim durumunda
     if (!state.hasRole) {
       return (
-        <UnauthorizedState 
-          message={`Bu sayfaya erişim yetkiniz bulunmuyor. '${requiredRole}' rolüne sahip olmanız gerekiyor.`} 
-          navigateTo={navigateTo} 
+        <UnauthorizedState
+          message={`Bu sayfaya erişim yetkiniz bulunmuyor. '${requiredRole}' rolüne sahip olmanız gerekiyor.`}
+          navigateTo={navigateTo}
         />
       );
     }
@@ -126,9 +144,7 @@ export function ErrorState({ message }: { message: string }) {
             <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
             <CardTitle className="text-lg">Hata Oluştu</CardTitle>
           </div>
-          <CardDescription>
-            {message}
-          </CardDescription>
+          <CardDescription>{message}</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <Button onClick={() => window.location.reload()} className="w-full">
@@ -141,11 +157,11 @@ export function ErrorState({ message }: { message: string }) {
 }
 
 // Yetkisiz erişim bileşeni
-export function UnauthorizedState({ 
-  message, 
-  navigateTo 
-}: { 
-  message: string; 
+export function UnauthorizedState({
+  message,
+  navigateTo,
+}: {
+  message: string;
   navigateTo: string;
 }) {
   return (
@@ -156,9 +172,7 @@ export function UnauthorizedState({
             <ShieldAlert className="h-5 w-5 text-amber-500 dark:text-amber-400" />
             <CardTitle className="text-lg">Erişim Reddedildi</CardTitle>
           </div>
-          <CardDescription>
-            {message}
-          </CardDescription>
+          <CardDescription>{message}</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <Button asChild variant="outline" className="w-full">

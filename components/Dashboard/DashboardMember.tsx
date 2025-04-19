@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getUserName, getUserGyms } from "@/contexts/AuthContext";
-import type { User, Gym } from "@/types/supabase";
+import type { Gym } from "@/types/supabase";
+import type { BasicUser } from "@/contexts/AuthContext";
+import WelcomeMessage from "./WelcomeMessage";
 
 // Separate components for better organization
 const GymCard = ({ gym }: { gym: Gym }) => (
@@ -36,7 +38,7 @@ const GymsList = ({ gyms, isLoading }: { gyms: Gym[]; isLoading: boolean }) => {
 
 export default function DashboardMember({ userId }: { userId: string }) {
   const [userData, setUserData] = useState<{
-    user: User | null;
+    user: BasicUser | null;
     userGyms: Gym[];
     isLoadingUser: boolean;
     isLoadingGyms: boolean;
@@ -56,7 +58,7 @@ export default function DashboardMember({ userId }: { userId: string }) {
         const data = await getUserName(userId);
         setUserData((prev) => ({
           ...prev,
-          user: data as User,
+          user: data,
           isLoadingUser: false,
         }));
       } catch (error) {
@@ -123,12 +125,12 @@ export default function DashboardMember({ userId }: { userId: string }) {
       {isLoadingUser ? (
         <div className="mb-4">Kullanıcı bilgileri yükleniyor...</div>
       ) : user ? (
-        <div className="mb-6 text-lg">
-          Hoş geldin,{" "}
-          <span className="font-medium">
-            {user.first_name} {user.last_name}
-          </span>
-          !
+        <div className="mb-6">
+          <WelcomeMessage
+            firstName={user.first_name || ""}
+            lastName={user.last_name || ""}
+            role="member"
+          />
         </div>
       ) : null}
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { DashboardTrainer } from "@/components/Dashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
+import DashboardTrainer from "@/components/Dashboard/DashboardTrainer";
 
 /**
  * Eğitmen dashboard sayfası
@@ -11,7 +11,8 @@ import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
 export default function TrainerDashboardPage() {
   // useAuth hook'u sadece üst seviyede çağrıldı, callback veya yardımcı fonksiyonlar içinde kullanılmıyor
   // Herhangi bir implicit any tipi yok, userId tipi zaten tanımlı
-  const { userId } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id;
   
   // Rol erişim yüksek seviye bileşeniyle sarmalanmış eğitmen paneli
   const TrainerDashboardWithAccess = withRoleAccess({

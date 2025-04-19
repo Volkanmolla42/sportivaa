@@ -21,11 +21,21 @@ export function GymCreateForm({ ownerUserId, onCreated }: GymCreateFormProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const gymId = await createGym({ name, address, phone, owner_user_id: ownerUserId });
-      setName("");
-      setAddress("");
-      setPhone("");
-      if (onCreated) onCreated(gymId);
+      const handleCreate = async () => {
+        setIsLoading(true);
+        const gymId = await createGym({
+          name,
+          city: "",
+          address,
+          phone,
+          owner_user_id: ownerUserId,
+        });
+        setName("");
+        setAddress("");
+        setPhone("");
+        if (onCreated) if (gymId) onCreated(gymId);
+      };
+      await handleCreate();
     } catch (err: unknown) {
       if (err && typeof err === "object" && "message" in err) {
         setError((err as { message?: string }).message || "Bir hata oluştu.");

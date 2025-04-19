@@ -1,10 +1,11 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
-import { getUserSessionWithRoles } from "@/contexts/AuthContext";
-import { UserProfileName } from "@/components/user-profile/UserProfileName";
-import { Suspense } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import DashboardMember from "@/components/Dashboard/DashboardMember";
+import DashboardTrainer from "@/components/Dashboard/DashboardTrainer";
+import DashboardGymManager from "@/components/Dashboard/DashboardGymManager";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   User,
@@ -12,7 +13,6 @@ import {
   Building2,
   Menu,
   X,
-  ChevronDown,
   LogOut,
   Home,
   Settings,
@@ -22,18 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import { cn } from "@/lib/utils";
+import RoleSwitcher from "@/components/Dashboard/RoleSwitcher"; 
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Logo from "@/components/home/Logo";
@@ -146,96 +135,50 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
   },
 };
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const {
-    userId,
-    isLoading: authLoading,
-    user,
-    displayName,
-    refreshUserData,
-  } = useAuth();
+export default function DashboardLayout() {
+  const { user, roles: ctxRoles, isLoading: authLoading, signOut } = useAuth();
+  const router = useRouter();
 
-  const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // Kullanıcı rollerini getir
-  // Kullanıcı verilerini yenile
+  // set initial role from context
   useEffect(() => {
-    if (userId) {
-      refreshUserData();
+    if (!authLoading && ctxRoles.length > 0) {
+      setSelectedRole(ctxRoles[0]);
+      setLoading(false);
     }
-  }, [userId, refreshUserData]);
-
-  useEffect(() => {
-    async function fetchRoles() {
-      setLoading(true);
-
-      try {
-        if (!userId) {
-          setLoading(false);
-          router.push("/auth?mode=login");
-          return;
-        }
-
-        // Roller bilgisini alıyoruz
-        const { roles } = await getUserSessionWithRoles();
-        // Kullanıcı adı ve e-posta bilgisi useAuth() context'inden alınacak.
-
-        // Mevcut rolü belirle
-        let role = "";
-        const found = Object.entries(ROLE_ROUTES).find(([, val]) =>
-          pathname.startsWith(val.path)
-        );
-
-        if (found) {
-          role = found[0];
-        } else if (roles.includes("GymManager")) {
-          role = "GymManager";
-        } else if (roles.includes("Trainer")) {
-          role = "Trainer";
-        } else {
-          role = "Member";
-        }
-
-        setRoles(roles);
-        setSelectedRole(role);
-        setLoading(false);
-      } catch (error) {
-        console.error("Roller yüklenirken hata:", error);
-        setLoading(false);
-      }
-    }
-
-    fetchRoles();
-  }, [userId, pathname, router]);
-
-  // Yükleme durumu
-  if (loading || authLoading) {
-    return <DashboardLoadingSkeleton />;
-  }
+  }, [authLoading, ctxRoles]);
 
   // Rol değişimi için fonksiyon
   const handleRoleChange = (role: string) => {
     setSelectedRole(role);
-    router.push(ROLE_ROUTES[role].path);
   };
 
   // Çıkış yapma fonksiyonu
   const handleSignOut = () => {
-    supabase.auth
-      .signOut()
-      .then(() => {
-        router.push("/");
-      })
-      .catch((error) => {
-        console.error("Çıkış yapılırken hata:", error);
-      });
+    signOut()
+      .then(() => router.push("/"))
+      .catch((err) => console.error("Çıkış yapılırken hata:", err));
   };
+
+  // Yükleme durumu
+  if (loading || authLoading || !user) {
+    return <DashboardLoadingSkeleton />;
+  }
+
+  // Safe userId and displayName extraction
+  const userId = user.id;
+  const metadata = user.user_metadata as Record<string, unknown> | null;
+  const displayName =
+    typeof metadata?.first_name === 'string'
+      ? metadata.first_name
+      : typeof metadata?.firstName === 'string'
+      ? metadata.firstName
+      : typeof metadata?.name === 'string'
+      ? metadata.name
+      : user.email?.split('@')[0] || '';
 
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
@@ -249,48 +192,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Rol Seçimi */}
-        {roles.length > 1 && (
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-between gap-2 h-10"
-                >
-                  <div className="flex items-center gap-2">
-                    {ROLE_ROUTES[selectedRole]?.icon}
-                    <span className="font-medium">
-                      {ROLE_ROUTES[selectedRole]?.label}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuLabel>Rolünü değiştir</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {roles.map((role) => (
-                  <DropdownMenuItem
-                    key={role}
-                    onClick={() => handleRoleChange(role)}
-                    className={cn(
-                      "flex items-center gap-2 cursor-pointer",
-                      selectedRole === role && "bg-slate-100 dark:bg-slate-800"
-                    )}
-                  >
-                    {ROLE_ROUTES[role]?.icon}
-                    <div className="flex flex-col">
-                      <span>{ROLE_ROUTES[role]?.label}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
-                        {ROLE_ROUTES[role]?.description}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+          <RoleSwitcher roles={ctxRoles} selectedRole={selectedRole} onChange={handleRoleChange} />
+        </div>
 
         {/* Menü İçeriği */}
         <ScrollArea className="flex-grow overflow-auto py-4">
@@ -388,7 +292,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="flex-grow overflow-hidden">
               <div className="font-medium truncate">{displayName}</div>
               <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {user?.email || "kullanici@example.com"}
+                {user.email || "kullanici@example.com"}
               </div>
             </div>
           </div>
@@ -451,50 +355,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       </span>
                     }
                   >
-                    <UserProfileName userId={userId as string} />
+                    <div className="font-medium truncate">{displayName}</div>
                   </Suspense>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {user?.email || "kullanici@example.com"}
+                  {user.email || "kullanici@example.com"}
                 </div>
               </div>
             </div>
             {/* Rol Seçimleri */}
-            {roles.length > 1 && (
-              <div>
-                <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                  ROLLERİNİZ
-                </h3>
-                <div className="space-y-2">
-                  {roles.map((role) => (
-                    <button
-                      key={role}
-                      onClick={() => {
-                        handleRoleChange(role);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`flex items-center justify-between p-2 rounded-md text-left w-full
-                        ${
-                          selectedRole === role
-                            ? "bg-slate-100 dark:bg-slate-800"
-                            : ""
-                        }
-                      `}
-                    >
-                      <div className="flex items-center gap-2">
-                        {ROLE_ROUTES[role]?.icon}
-                        <div>
-                          <div className="font-medium">
-                            {ROLE_ROUTES[role]?.label}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {ROLE_ROUTES[role]?.description}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+            {ctxRoles.length > 1 && (
+              <div className="p-4">
+                <RoleSwitcher
+                  roles={ctxRoles}
+                  selectedRole={selectedRole}
+                  onChange={(role) => {
+                    handleRoleChange(role);
+                    setMobileMenuOpen(false);
+                  }}
+                />
               </div>
             )}
 
@@ -618,28 +497,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </Link>
 
             {/* Kullanıcı Menüsü */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="text-red-500 dark:text-red-400 cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  <span>Çıkış Yap</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <User className="h-5 w-5" />
+            </Button>
           </div>
         </header>
 
         {/* İçerik */}
         <main className="flex-grow p-4 md:p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto w-full">{children}</div>
+          <div className="max-w-7xl mx-auto w-full">
+            {selectedRole === "Member" && <DashboardMember userId={userId} />}
+            {selectedRole === "Trainer" && <DashboardTrainer userId={userId} />}
+            {selectedRole === "GymManager" && <DashboardGymManager userId={userId} />}
+          </div>
         </main>
       </div>
     </div>

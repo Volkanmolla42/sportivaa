@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardGymManager from "@/components/Dashboard/GymManager/DashboardGymManager";
+import DashboardGymManager from "@/components/Dashboard/DashboardGymManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
 
@@ -11,13 +11,14 @@ import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
 export default function GymManagerDashboardPage() {
   // useAuth hook'u sadece üst seviyede çağrıldı, callback veya yardımcı fonksiyonlar içinde kullanılmıyor
   // Herhangi bir implicit any tipi yok, userId tipi zaten tanımlı
-  const { userId } = useAuth();
-  
+  const { user } = useAuth();
+  const userId = user?.id;
+
   // Rol erişim yüksek seviye bileşeniyle sarmalanmış salon yöneticisi paneli
   const GymManagerDashboardWithAccess = withRoleAccess({
     requiredRole: "GymManager",
-    Component: ({ userId }: { userId: string }) => <DashboardGymManager userId={userId} />,
-    navigateTo: "/dashboard"
+    Component: DashboardGymManager,
+    navigateTo: "/dashboard",
   });
 
   // Salon yöneticisi paneli ile rol erişim kontrolünü birleştir

@@ -7,10 +7,9 @@ import { Select, SelectItem } from "@/components/ui/select";
 
 export type GymUserAddFormProps = {
   gymId: string;
-  addedBy: string;
 };
 
-export default function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) {
+export default function GymUserAddForm({ gymId }: GymUserAddFormProps) {
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState<"Member" | "Trainer">("Member");
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +22,7 @@ export default function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) 
     setError(null);
     setSuccess(false);
     try {
-      await addUserToGym({ user_id: userId, gym_id: gymId, role, added_by: addedBy });
+      await addUserToGym(userId, gymId, role);
       setUserId("");
       setRole("Member");
       setSuccess(true);
@@ -46,12 +45,19 @@ export default function GymUserAddForm({ gymId, addedBy }: GymUserAddFormProps) 
         onChange={(e) => setUserId(e.target.value)}
         required
       />
-      <Select value={role} onValueChange={(value: string) => setRole(value as "Member" | "Trainer")}>
+      <Select
+        value={role}
+        onValueChange={(value: string) =>
+          setRole(value as "Member" | "Trainer")
+        }
+      >
         <SelectItem value="Member">Üye</SelectItem>
         <SelectItem value="Trainer">Antrenör</SelectItem>
       </Select>
       {error && <div className="text-destructive text-sm">{error}</div>}
-      {success && <div className="text-success text-sm">Kullanıcı başarıyla eklendi.</div>}
+      {success && (
+        <div className="text-success text-sm">Kullanıcı başarıyla eklendi.</div>
+      )}
       <Button type="submit" disabled={isLoading}>
         {isLoading ? "Ekleniyor..." : "Kullanıcıyı Ekle"}
       </Button>
