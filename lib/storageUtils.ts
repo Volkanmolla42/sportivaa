@@ -15,7 +15,7 @@ export function getStorageItem<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") {
     return defaultValue;
   }
-  
+
   try {
     const item = localStorage.getItem(key);
     if (item === null) {
@@ -38,7 +38,7 @@ export function setStorageItem<T>(key: string, value: T): boolean {
   if (typeof window === "undefined") {
     return false;
   }
-  
+
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
@@ -57,7 +57,7 @@ export function removeStorageItem(key: string): boolean {
   if (typeof window === "undefined") {
     return false;
   }
-  
+
   try {
     localStorage.removeItem(key);
     return true;
@@ -75,13 +75,15 @@ export function isStorageAvailable(): boolean {
   if (typeof window === "undefined") {
     return false;
   }
-  
+
   try {
     const testKey = "__storage_test__";
     localStorage.setItem(testKey, testKey);
     localStorage.removeItem(testKey);
     return true;
   } catch (error) {
+    console.error("Error checking localStorage availability:", error);
+    // Herhangi bir hata durumunda false döndür
     return false;
   }
 }

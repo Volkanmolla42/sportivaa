@@ -156,8 +156,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return <DashboardLoadingSkeleton />;
   }
 
-  // Safe userId and displayName extraction
-  const userId = user.id;
+  // Safe displayName extraction
   const metadata = user.user_metadata as Record<string, unknown> | null;
   const displayName =
     typeof metadata?.first_name === 'string'
@@ -308,7 +307,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Menu - Sidebar */}
       <div
         className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-900 
+        fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-900
         transform transition-transform duration-300 ease-in-out lg:hidden
         ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
       `}

@@ -76,6 +76,7 @@ function DashboardContent() {
       });
       isInitialRender.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch user data with the custom hook
@@ -156,6 +157,7 @@ function DashboardContent() {
       });
       prevLoadingState.current = isLoading;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
 
   if (isLoading) {

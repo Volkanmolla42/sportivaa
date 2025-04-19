@@ -32,14 +32,16 @@ export function ReactQueryProvider({
 
 // Utility function to create a query key
 export function createQueryKey<T extends string>(baseKey: T) {
-  return {
+  const queryKey = {
     all: [baseKey] as const,
-    lists: () => [...this.all, "list"] as const,
-    list: (filters: Record<string, unknown>) =>
-      [...this.lists(), { filters }] as const,
-    details: () => [...this.all, "detail"] as const,
-    detail: (id: string) => [...this.details(), id] as const,
+    lists: function() { return [...this.all, "list"] as const },
+    list: function(filters: Record<string, unknown>) {
+      return [...this.lists(), { filters }] as const
+    },
+    details: function() { return [...this.all, "detail"] as const },
+    detail: function(id: string) { return [...this.details(), id] as const },
   };
+  return queryKey;
 }
 
 // Query keys for different entities

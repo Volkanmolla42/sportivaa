@@ -10,13 +10,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Separate components for better organization
-const GymCard = memo(({ gym }: { gym: Gym }) => (
+const GymCard = memo(({ gym }: { gym: Gym }) => {
+  return (
   <div className="rounded-lg border bg-card p-4 flex flex-col shadow-sm">
     <span className="font-semibold text-lg mb-1">{gym.name}</span>
     <span className="text-muted-foreground">{gym.city}</span>
     {/* İleride salon detayına gitmek için buton/link eklenebilir */}
   </div>
-));
+  );
+});
+
+GymCard.displayName = "GymCard";
 
 const GymsList = memo(
   ({ gyms, isLoading }: { gyms: Gym[]; isLoading: boolean }) => {
@@ -47,6 +51,8 @@ const GymsList = memo(
     );
   }
 );
+
+GymsList.displayName = "GymsList";
 
 function DashboardMember({ userId }: { userId: string }) {
   // Fetch user data with the custom hook
@@ -125,4 +131,7 @@ function DashboardMember({ userId }: { userId: string }) {
 }
 
 // Memoize the component to prevent unnecessary re-renders
-export default memo(DashboardMember);
+const MemoizedDashboardMember = memo(DashboardMember);
+MemoizedDashboardMember.displayName = "DashboardMember";
+
+export default MemoizedDashboardMember;
