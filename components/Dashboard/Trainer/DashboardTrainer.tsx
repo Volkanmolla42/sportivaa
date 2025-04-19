@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { getUserName, getTrainerProfile } from "@/lib/profileApi";
+import { getUserName, getTrainerProfile } from "@/contexts/AuthContext";
 import type { User } from "@/types/supabase";
 import { TrainerRegisterForm } from "@/components/Forms";
 import { Skeleton } from "@/components/ui/skeleton";

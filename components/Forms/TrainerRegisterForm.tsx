@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { registerTrainer } from "@/lib/profileApi";
+import { registerTrainer } from "@/contexts/AuthContext";
 
 interface TrainerRegisterFormProps {
   userId: string;

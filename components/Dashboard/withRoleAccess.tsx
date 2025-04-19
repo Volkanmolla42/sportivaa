@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getUserRoles } from "@/lib/profileApi";
+import { getUserRoles } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, ArrowLeft, ShieldAlert } from "lucide-react";

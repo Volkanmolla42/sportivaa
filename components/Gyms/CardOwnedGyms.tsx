@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getGymsByManager } from "@/lib/profileApi";
+import { getGymsByManager } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type OwnedGym = { id: string; name: string; city: string };

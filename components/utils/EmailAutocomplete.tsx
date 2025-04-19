@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect} from "react";
 import { Input } from "@/components/ui/input";
-import { getUsersByEmailPrefix } from "@/lib/profileApi";
+import { getUsersByEmailPrefix } from "@/contexts/AuthContext";
 
 interface EmailAutocompleteProps {
   value: string;

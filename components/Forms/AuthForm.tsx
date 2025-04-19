@@ -21,6 +21,7 @@ export default function AuthForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState("");
 
@@ -47,7 +48,15 @@ export default function AuthForm() {
         if (error) throw error;
         router.push("dashboard");
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              first_name: firstName
+            }
+          }
+        });
         if (error) throw error;
         const { user } = data;
         if (user) {
@@ -107,6 +116,22 @@ export default function AuthForm() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {mode === "register" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="text-sm font-medium">
+                          Adınız
+                        </Label>
+                        <Input
+                          id="firstName"
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required={mode === "register"}
+                          placeholder="Adınız"
+                          className="w-full"
+                        />
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium">
                         E-posta

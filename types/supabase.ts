@@ -1,11 +1,6 @@
 // Supabase veritabanı tipleri
 // Bu dosya, ana tablolar ve ilişkiler için temel TypeScript tiplerini içerir.
 
-// Supabase Auth paketi tarafından sağlanan User tipini yeniden export ediyoruz
-// Bunu AuthUser olarak adlandırıyoruz ki, kendi User tipimizle karışmasın
-import type { User as SupabaseUser } from "@supabase/supabase-js";
-export type AuthUser = SupabaseUser;
-
 export type User = {
   id: string; // uuid
   first_name?: string | null;

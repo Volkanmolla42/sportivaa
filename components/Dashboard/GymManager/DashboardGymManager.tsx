@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUserName, getGymsByManager } from "@/lib/profileApi";
+import { getUserName, getGymsByManager } from "@/contexts/AuthContext";
 import GymDetail from "@/components/Dashboard/GymManager/GymDetail";
 
 export default function DashboardGymManager({ userId }: { userId: string }) {

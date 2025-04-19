@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUserGyms } from "@/lib/profileApi";
+import { getUserGyms } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type GymItem = { gym_id: string; gym_name: string; gym_city: string };

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { updateUserName } from "@/lib/profileApi";
+import { updateUserName } from "@/contexts/AuthContext";
 
 interface UserNameStepProps {
   userId: string;

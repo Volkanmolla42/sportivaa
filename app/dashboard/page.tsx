@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { getUserName, getUserGyms, getGymsByManager, getTrainerProfile } from "@/lib/profileApi";
+import { getUserName, getUserGyms, getGymsByManager, getTrainerProfile, useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";

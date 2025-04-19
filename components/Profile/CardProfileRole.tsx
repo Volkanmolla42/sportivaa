@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getUserRoles, getUserName, updateUserName } from "@/lib/profileApi";
+import { getUserRoles, getUserName, updateUserName } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";

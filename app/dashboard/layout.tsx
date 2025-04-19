@@ -1,7 +1,9 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
-import { getUserSessionWithRoles } from "@/lib/profileApi";
+import { getUserSessionWithRoles } from "@/contexts/AuthContext";
+import { UserProfileName } from "@/components/user-profile/UserProfileName";
+import { Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -143,7 +145,7 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { userId, isLoading: authLoading, user, userData } = useAuth();
+  const { userId, isLoading: authLoading, user, displayName, refreshUserData } = useAuth();
 
   const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
@@ -154,6 +156,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   // Kullanıcı rollerini getir
+  // Kullanıcı verilerini yenile
+  useEffect(() => {
+    if (userId) {
+      refreshUserData();
+    }
+  }, [userId, refreshUserData]);
+
   useEffect(() => {
     async function fetchRoles() {
       setLoading(true);
@@ -357,8 +366,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
             </div>
             <div className="flex-grow overflow-hidden">
-              <div className="font-medium truncate">{userData?.first_name ? `${userData.first_name} ${userData.last_name || ''}` : "Kullanıcı"}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{userData?.email || user?.email || "kullanici@example.com"}</div>
+              <div className="font-medium truncate">
+                {displayName}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {user?.email || "kullanici@example.com"}
+              </div>
             </div>
           </div>
 
@@ -410,8 +423,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
               </div>
               <div className="flex-grow overflow-hidden">
-                <div className="font-medium truncate">{userData?.first_name ? `${userData.first_name} ${userData.last_name || ''}` : "Kullanıcı"}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{userData?.email || user?.email || "kullanici@example.com"}</div>
+                <div className="font-medium truncate">
+  <Suspense fallback={<span className="animate-pulse text-slate-400">Yükleniyor...</span>}>
+    <UserProfileName userId={userId as string} />
+  </Suspense>
+</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || "kullanici@example.com"}</div>
               </div>
             </div>
             {/* Rol Seçimleri */}

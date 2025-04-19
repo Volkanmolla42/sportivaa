@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUserName, getUserGyms } from "@/lib/profileApi";
+import { getUserName, getUserGyms } from "@/contexts/AuthContext";
 import type { User, Gym } from "@/types/supabase";
 
 // Separate components for better organization

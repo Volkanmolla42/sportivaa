@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { addUserToGym } from "@/lib/profileApi";
+import { addUserToGym } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
