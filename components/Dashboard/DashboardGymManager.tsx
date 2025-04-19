@@ -45,7 +45,7 @@ export default function DashboardGymManager({ userId }: { userId: string }) {
           <WelcomeMessage
             firstName={user.first_name || ""}
             lastName={user.last_name || ""}
-            role="gymmanager"
+            role="GymManager"
           />
         </div>
       )}

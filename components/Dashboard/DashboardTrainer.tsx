@@ -14,7 +14,7 @@ const TrainerWelcome = ({ user }: { user: User | BasicUser }) => (
     <WelcomeMessage
       firstName={user.first_name || ""}
       lastName={user.last_name || ""}
-      role="trainer"
+      role="Trainer"
     />
   </div>
 );

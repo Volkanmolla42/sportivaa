@@ -1,29 +1,40 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
+import { UserRole } from "@/contexts/AuthContext";
 
 interface WelcomeMessageProps {
   firstName?: string;
   lastName?: string;
-  role?: "default" | "member" | "trainer" | "gymmanager";
+  role?: UserRole | "default";
   children?: ReactNode;
 }
 
-export default function WelcomeMessage({
+// Role-based messages mapping
+const ROLE_MESSAGES = {
+  default:
+    "Sportiva platformunun kontrol panelinde her şeyi tek yerden yönetebilirsin.",
+  Member:
+    "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyebilirsiniz.",
+  Trainer:
+    "Eğitmen panelinizde öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetebilirsiniz.",
+  GymManager:
+    "Salon yöneticisi panelinizde salonunuzu, üyelerinizi ve eğitmenlerinizi yönetebilirsiniz.",
+};
+
+function WelcomeMessage({
   firstName,
   lastName,
   role = "default",
   children,
 }: WelcomeMessageProps) {
-  // Boş string kontrolü yerine string uzunluğunu kontrol ediyoruz
-  console.log("WelcomeMessage props:", { firstName, lastName, role }); // Debug için
-
+  // Validate string inputs
   const hasFirstName =
     firstName && typeof firstName === "string" && firstName.trim().length > 0;
   const hasLastName =
     lastName && typeof lastName === "string" && lastName.trim().length > 0;
 
-  // İsim oluşturma
+  // Create full name with fallback
   let fullName = "Sporcu";
   if (hasFirstName && hasLastName) {
     fullName = `${firstName} ${lastName}`;
@@ -33,18 +44,6 @@ export default function WelcomeMessage({
     fullName = lastName;
   }
 
-  // Rol bazlı mesajlar
-  const roleMessages = {
-    default:
-      "Sportiva platformunun kontrol panelinde her şeyi tek yerden yönetebilirsin.",
-    member:
-      "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyebilirsiniz.",
-    trainer:
-      "Eğitmen panelinizde öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetebilirsiniz.",
-    gymmanager:
-      "Salon yöneticisi panelinizde salonunuzu, üyelerinizi ve eğitmenlerinizi yönetebilirsiniz.",
-  };
-
   return (
     <div className="space-y-2">
       <div className="text-lg md:text-xl font-medium">
@@ -52,10 +51,13 @@ export default function WelcomeMessage({
       </div>
       {!children && role && (
         <p className="text-slate-600 dark:text-slate-400">
-          {roleMessages[role]}
+          {ROLE_MESSAGES[role] || ROLE_MESSAGES.default}
         </p>
       )}
       {children}
     </div>
   );
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export default memo(WelcomeMessage);

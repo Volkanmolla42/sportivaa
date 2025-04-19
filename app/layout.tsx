@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/toaster";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,15 +18,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sportiva | Dijital Spor Platformu",
-  description: "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
+  description:
+    "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
   keywords: [
-    "spor", "salon", "fitness", "egzersiz", "dijital platform", "rezervasyon", "analiz", "üyelik", "eğitmen", "yeni nesil spor"
+    "spor",
+    "salon",
+    "fitness",
+    "egzersiz",
+    "dijital platform",
+    "rezervasyon",
+    "analiz",
+    "üyelik",
+    "eğitmen",
+    "yeni nesil spor",
   ],
   authors: [{ name: "Sportiva", url: "https://sportiva.com" }],
   creator: "Sportiva",
   openGraph: {
     title: "Sportiva | Dijital Spor Platformu",
-    description: "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
+    description:
+      "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",
     url: "https://sportiva.com",
     siteName: "Sportiva",
     images: [
@@ -32,11 +45,11 @@ export const metadata: Metadata = {
         url: "/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "Sportiva Logo"
-      }
+        alt: "Sportiva Logo",
+      },
     ],
     locale: "tr_TR",
-    type: "website"
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
@@ -44,9 +57,7 @@ export const metadata: Metadata = {
     description: "Spor salonları, eğitmenler ve üyeler için dijital platform.",
     site: "@sportiva",
     creator: "@sportiva",
-    images: [
-      "/icon-512x512.png"
-    ]
+    images: ["/icon-512x512.png"],
   },
   robots: {
     index: true,
@@ -58,10 +69,10 @@ export const metadata: Metadata = {
       noimageindex: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
-      "max-snippet": -1
-    }
+      "max-snippet": -1,
+    },
   },
-  manifest: "/manifest.webmanifest"
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -75,7 +86,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>{children}</AuthProvider>
+          <ReactQueryProvider>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>
