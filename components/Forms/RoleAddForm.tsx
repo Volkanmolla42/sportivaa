@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth} from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,28 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {Dumbbell, Building2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { dataService } from "@/services/dataService";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ROLE_INFO, SPECIALTY_OPTIONS, CITIES, getAvailableRoles } from "./RoleAddForm/constants";
 
-// Role information mapping
-const ROLE_INFO = {
-  Trainer: {
-    label: "Eğitmen",
-    icon: <Dumbbell className="w-5 h-5" />,
-    description: "Eğitmen olarak öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetebilirsiniz.",
-    bgClass: "from-amber-500 to-orange-500",
-  },
-  GymManager: {
-    label: "Salon Yöneticisi",
-    icon: <Building2 className="w-5 h-5" />,
-    description: "Salon yöneticisi olarak salonunuzu, üyelerinizi ve eğitmenlerinizi yönetebilirsiniz.",
-    bgClass: "from-green-500 to-emerald-500",
-  },
-};
 
 export default function RoleAddForm() {
   const { user, roles, refresh } = useAuth();
@@ -52,10 +37,12 @@ export default function RoleAddForm() {
   const [experience, setExperience] = useState<string>("1");
   const [specialty, setSpecialty] = useState<string>("");
 
+  // Gym Manager form fields
+  const [gymName, setGymName] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+
   // Filter out roles the user already has
-  const availableRoles = Object.keys(ROLE_INFO).filter(
-    (role) => !roles.includes(role as UserRole)
-  ) as Array<"Trainer" | "GymManager">;
+  const availableRoles = getAvailableRoles(roles);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,7 +67,23 @@ export default function RoleAddForm() {
 
         await dataService.createTrainerProfile(user.id, experienceNum, specialty);
       } else if (selectedRole === "GymManager") {
+        // Validate gym manager fields
+        if (!gymName.trim()) {
+          throw new Error("Salon adı boş olamaz");
+        }
+        if (!city.trim()) {
+          throw new Error("Şehir seçmelisiniz");
+        }
+
+        // First update the user to be a gym manager
         await dataService.createGymManagerProfile(user.id);
+
+        // Then create a gym with the provided information
+        await dataService.createGym({
+          name: gymName,
+          city: city,
+          owner_user_id: user.id
+        });
       }
 
       setSuccess(true);
@@ -165,7 +168,27 @@ export default function RoleAddForm() {
                 {ROLE_INFO[selectedRole].icon}
                 <h3 className="ml-2 font-semibold">{ROLE_INFO[selectedRole].label}</h3>
               </div>
-              <p className="text-sm">{ROLE_INFO[selectedRole].description}</p>
+              <p className="text-sm mb-2">{ROLE_INFO[selectedRole].description}</p>
+              {ROLE_INFO[selectedRole].benefits && (
+                <div className="mb-2">
+                  <h4 className="font-semibold text-xs mb-1">Avantajlar:</h4>
+                  <ul className="list-disc list-inside text-xs">
+                    {ROLE_INFO[selectedRole].benefits.map((b: string, i: number) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {ROLE_INFO[selectedRole].requirements && (
+                <div>
+                  <h4 className="font-semibold text-xs mb-1">Gereksinimler:</h4>
+                  <ul className="list-disc list-inside text-xs">
+                    {ROLE_INFO[selectedRole].requirements.map((r: string, i: number) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
@@ -185,14 +208,60 @@ export default function RoleAddForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="specialty">Uzmanlık Alanı</Label>
-                <Input
-                  id="specialty"
-                  type="text"
+                <Select
                   value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
-                  placeholder="Örn: Fitness, Yoga, Pilates"
+                  onValueChange={setSpecialty}
+                  required
+                >
+                  <SelectTrigger id="specialty">
+                    <SelectValue placeholder="Uzmanlık seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SPECIALTY_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {selectedRole === "GymManager" && (
+            <div className="space-y-3 mt-4 p-4 border rounded-lg">
+              <h3 className="font-medium">Salon Bilgileri</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Yönetici olacağınız salon için gerekli bilgileri doldurun. Bu bilgiler üyeler tarafından görüntülenecektir.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="gymName">Salon Adı</Label>
+                <Input
+                  id="gymName"
+                  type="text"
+                  value={gymName}
+                  onChange={(e) => setGymName(e.target.value)}
+                  placeholder="Örn: Sportiva Fitness Club"
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Şehir</Label>
+                <Select
+                  value={city}
+                  onValueChange={(value) => setCity(value)}
+                >
+                  <SelectTrigger id="city">
+                    <SelectValue placeholder="Şehir seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CITIES.sort().map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

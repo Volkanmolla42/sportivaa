@@ -1,7 +1,6 @@
 import { Dumbbell, Building2 } from "lucide-react";
-import { z } from "zod";
 import { UserRole } from "@/contexts/AuthContext";
-
+import React from "react";
 // Role information mapping
 export const ROLE_INFO = {
   Trainer: {
