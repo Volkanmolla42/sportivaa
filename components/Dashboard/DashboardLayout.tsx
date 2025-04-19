@@ -252,6 +252,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </h2>
               </div>
               <Link
+                href="/dashboard/roles/add"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
+              >
+                <User className="h-5 w-5" />
+                <span>Rol Ekle</span>
+              </Link>
+              <Link
                 href="/dashboard/settings"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
@@ -428,6 +435,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 GENEL
               </h3>
               <div className="space-y-1">
+                <Link
+                  href="/dashboard/roles/add"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <User className="h-5 w-5" />
+                  <span>Rol Ekle</span>
+                </Link>
                 <Link
                   href="/dashboard/settings"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"

@@ -452,37 +452,86 @@ ActivityItem.displayName = "ActivityItem";
 
 // Roles section
 const RolesSection = memo(() => {
+  const { roles } = useAuth();
+
+  // Check which roles the user has
+  const hasTrainerRole = roles.includes("Trainer");
+  const hasGymManagerRole = roles.includes("GymManager");
+
+  // Determine if we need to show the "Add Role" card
+  const needsRoleAddCard = !hasTrainerRole || !hasGymManagerRole;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <RoleCard
-        title="Üye Paneli"
-        description="Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin."
-        icon={<Users className="w-5 h-5" />}
-        href="/dashboard/member"
-        bgClass="from-blue-500 to-cyan-500"
-        iconClass="bg-blue-500"
-        buttonText="Üye Paneline Git"
-      />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <RoleCard
+          title="Üye Paneli"
+          description="Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin."
+          icon={<Users className="w-5 h-5" />}
+          href="/dashboard/member"
+          bgClass="from-blue-500 to-cyan-500"
+          iconClass="bg-blue-500"
+          buttonText="Üye Paneline Git"
+        />
 
-      <RoleCard
-        title="Eğitmen Paneli"
-        description="Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin."
-        icon={<Dumbbell className="w-5 h-5" />}
-        href="/dashboard/trainer"
-        bgClass="from-amber-500 to-orange-500"
-        iconClass="bg-amber-500"
-        buttonText="Eğitmen Paneline Git"
-      />
+        {hasTrainerRole && (
+          <RoleCard
+            title="Eğitmen Paneli"
+            description="Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin."
+            icon={<Dumbbell className="w-5 h-5" />}
+            href="/dashboard/trainer"
+            bgClass="from-amber-500 to-orange-500"
+            iconClass="bg-amber-500"
+            buttonText="Eğitmen Paneline Git"
+          />
+        )}
 
-      <RoleCard
-        title="Salon Yöneticisi"
-        description="Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin."
-        icon={<Building2 className="w-5 h-5" />}
-        href="/dashboard/gymmanager"
-        bgClass="from-emerald-500 to-green-500"
-        iconClass="bg-emerald-500"
-        buttonText="Yönetici Paneline Git"
-      />
+        {hasGymManagerRole && (
+          <RoleCard
+            title="Salon Yöneticisi"
+            description="Spor salonunuzu, üyelerinizi ve eğitmenlerinizi yönetin."
+            icon={<Building2 className="w-5 h-5" />}
+            href="/dashboard/gymmanager"
+            bgClass="from-emerald-500 to-green-500"
+            iconClass="bg-emerald-500"
+            buttonText="Yönetici Paneline Git"
+          />
+        )}
+      </div>
+
+      {needsRoleAddCard && (
+        <div className="mt-6">
+          <Card className="border-dashed border-2 border-slate-300 dark:border-slate-700">
+            <CardHeader>
+              <CardTitle>Yeni Rol Ekle</CardTitle>
+              <CardDescription>
+                Sportiva&apos;da daha fazla özelliğe erişmek için yeni roller ekleyebilirsiniz.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {!hasTrainerRole && (
+                  <div className="flex items-center gap-2">
+                    <Dumbbell className="w-5 h-5 text-amber-500" />
+                    <span>Eğitmen rolü ile öğrencilerinizi ve programlarınızı yönetin</span>
+                  </div>
+                )}
+                {!hasGymManagerRole && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-green-500" />
+                    <span>Salon Yöneticisi rolü ile salonunuzu ve üyelerinizi yönetin</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button asChild>
+                <Link href="/dashboard/roles/add">Rol Ekle</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   );
 });

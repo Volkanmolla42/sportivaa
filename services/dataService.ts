@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import type { BasicUser, BasicGym, TrainerProfile, UserRole } from "@/contexts/AuthContext";
-import type { Gym, Trainer } from "@/types/supabase";
+
 
 /**
  * Data service for fetching and manipulating data from Supabase
