@@ -7,7 +7,8 @@ interface UserProfileNameProps {
 }
 
 export function UserProfileName({ userId }: UserProfileNameProps) {
-  const [name, setName] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
@@ -17,12 +18,14 @@ export function UserProfileName({ userId }: UserProfileNameProps) {
     getUserName(userId)
       .then((data) => {
         if (isMounted) {
-          setName(data.first_name);
+          setFirstName(data.first_name);
+          setLastName(data.last_name);
           setLoading(false);
         }
       })
       .catch((err) => {
         if (isMounted) {
+          console.error("Kullanıcı adı alınamadı:", err);
           setError("Kullanıcı adı alınamadı");
           setLoading(false);
         }
@@ -34,5 +37,5 @@ export function UserProfileName({ userId }: UserProfileNameProps) {
 
   if (loading) return <span className="animate-pulse text-slate-400">Yükleniyor...</span>;
   if (error) return <span className="text-red-500">{error}</span>;
-  return <span>{name || "Kullanıcı"}</span>;
+  return <span>{firstName + " " + lastName || "Kullanıcı"}</span>;
 }

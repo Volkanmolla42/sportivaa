@@ -60,58 +60,60 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
     label: "Üye",
     path: "/dashboard/member",
     icon: <User className="w-5 h-5" />,
-    description: "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin.",
+    description:
+      "Üyelik bilgilerinizi, antrenman programlarınızı ve randevularınızı görüntüleyin.",
     menuItems: [
       {
         label: "Profil",
         path: "/dashboard/member/profile",
-        icon: <User className="w-4 h-4" />
+        icon: <User className="w-4 h-4" />,
       },
       {
         label: "Antrenmanlarım",
         path: "/dashboard/member/workouts",
-        icon: <Dumbbell className="w-4 h-4" />
+        icon: <Dumbbell className="w-4 h-4" />,
       },
       {
         label: "Randevularım",
         path: "/dashboard/member/appointments",
         icon: <Calendar className="w-4 h-4" />,
-        badge: "Yeni"
+        badge: "Yeni",
       },
       {
         label: "Üyeliklerim",
         path: "/dashboard/member/memberships",
-        icon: <Building2 className="w-4 h-4" />
-      }
-    ]
+        icon: <Building2 className="w-4 h-4" />,
+      },
+    ],
   },
   Trainer: {
     label: "Eğitmen",
     path: "/dashboard/trainer",
     icon: <Dumbbell className="w-5 h-5" />,
-    description: "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin.",
+    description:
+      "Öğrencilerinizi, programlarınızı ve çalışma takvimlerinizi yönetin.",
     menuItems: [
       {
         label: "Profil",
         path: "/dashboard/trainer/profile",
-        icon: <User className="w-4 h-4" />
+        icon: <User className="w-4 h-4" />,
       },
       {
         label: "Öğrencilerim",
         path: "/dashboard/trainer/students",
-        icon: <User className="w-4 h-4" />
+        icon: <User className="w-4 h-4" />,
       },
       {
         label: "Programlarım",
         path: "/dashboard/trainer/programs",
-        icon: <Dumbbell className="w-4 h-4" />
+        icon: <Dumbbell className="w-4 h-4" />,
       },
       {
         label: "Takvimim",
         path: "/dashboard/trainer/calendar",
-        icon: <Calendar className="w-4 h-4" />
-      }
-    ]
+        icon: <Calendar className="w-4 h-4" />,
+      },
+    ],
   },
   GymManager: {
     label: "Salon Yöneticisi",
@@ -122,36 +124,42 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
       {
         label: "Salonlarım",
         path: "/dashboard/gymmanager/gyms",
-        icon: <Building2 className="w-4 h-4" />
+        icon: <Building2 className="w-4 h-4" />,
       },
       {
         label: "Üyeler",
         path: "/dashboard/gymmanager/members",
-        icon: <User className="w-4 h-4" />
+        icon: <User className="w-4 h-4" />,
       },
       {
         label: "Eğitmenler",
         path: "/dashboard/gymmanager/trainers",
-        icon: <Dumbbell className="w-4 h-4" />
+        icon: <Dumbbell className="w-4 h-4" />,
       },
       {
         label: "Mali Rapor",
         path: "/dashboard/gymmanager/finances",
         icon: <Settings className="w-4 h-4" />,
-        badge: "Yeni"
-      }
-    ]
+        badge: "Yeni",
+      },
+    ],
   },
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { userId, isLoading: authLoading, user, displayName, refreshUserData } = useAuth();
+  const {
+    userId,
+    isLoading: authLoading,
+    user,
+    displayName,
+    refreshUserData,
+  } = useAuth();
 
   const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -216,16 +224,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setSelectedRole(role);
     router.push(ROLE_ROUTES[role].path);
   };
-  
+
   // Çıkış yapma fonksiyonu
   const handleSignOut = () => {
-    supabase.auth.signOut().then(() => {
-      router.push("/");
-    }).catch((error) => {
-      console.error("Çıkış yapılırken hata:", error);
-    });
+    supabase.auth
+      .signOut()
+      .then(() => {
+        router.push("/");
+      })
+      .catch((error) => {
+        console.error("Çıkış yapılırken hata:", error);
+      });
   };
-  
+
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
       {/* Desktop Sidebar */}
@@ -236,16 +247,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Logo size="default" className="py-2" />
           </Link>
         </div>
-        
+
         {/* Rol Seçimi */}
         {roles.length > 1 && (
           <div className="p-4 border-b border-slate-200 dark:border-slate-800">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full flex items-center justify-between gap-2 h-10">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-between gap-2 h-10"
+                >
                   <div className="flex items-center gap-2">
                     {ROLE_ROUTES[selectedRole]?.icon}
-                    <span className="font-medium">{ROLE_ROUTES[selectedRole]?.label}</span>
+                    <span className="font-medium">
+                      {ROLE_ROUTES[selectedRole]?.label}
+                    </span>
                   </div>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
@@ -258,7 +274,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     key={role}
                     onClick={() => handleRoleChange(role)}
                     className={cn(
-                      "flex items-center gap-2 cursor-pointer", 
+                      "flex items-center gap-2 cursor-pointer",
                       selectedRole === role && "bg-slate-100 dark:bg-slate-800"
                     )}
                   >
@@ -275,32 +291,34 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </DropdownMenu>
           </div>
         )}
-        
+
         {/* Menü İçeriği */}
         <ScrollArea className="flex-grow overflow-auto py-4">
           <nav className="flex flex-col space-y-4 px-3">
             {/* Dashboard */}
             <div>
               <div className="flex items-center px-3 mb-2">
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Dashboard</h2>
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  Dashboard
+                </h2>
               </div>
-              <Link 
-                href="/dashboard" 
+              <Link
+                href="/dashboard"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
                 <Home className="h-5 w-5" />
                 <span>Ana Sayfa</span>
               </Link>
-              
-              <Link 
-                href="/dashboard/notifications" 
+
+              <Link
+                href="/dashboard/notifications"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
                 <Bell className="h-5 w-5" />
                 <span>Bildirimler</span>
               </Link>
             </div>
-            
+
             {/* Seçilen Role Göre Menü */}
             {selectedRole && ROLE_ROUTES[selectedRole]?.menuItems && (
               <div>
@@ -320,10 +338,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         {item.icon}
                         <span>{item.label}</span>
                       </span>
-                      
+
                       {item.badge && (
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-xs"
                         >
                           {item.badge}
@@ -334,21 +352,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             )}
-            
+
             {/* Genel Menü */}
             <div>
               <div className="flex items-center px-3 mb-2">
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Genel</h2>
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  Genel
+                </h2>
               </div>
-              <Link 
-                href="/dashboard/settings" 
+              <Link
+                href="/dashboard/settings"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
                 <Settings className="h-5 w-5" />
                 <span>Ayarlar</span>
               </Link>
-              <Link 
-                href="/help" 
+              <Link
+                href="/help"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
                 <CircleHelp className="h-5 w-5" />
@@ -357,7 +377,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </nav>
         </ScrollArea>
-        
+
         {/* Kullanıcı Profili ve Çıkış */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           {/* Kullanıcı Bilgisi */}
@@ -366,9 +386,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
             </div>
             <div className="flex-grow overflow-hidden">
-              <div className="font-medium truncate">
-                {displayName}
-              </div>
+              <div className="font-medium truncate">{displayName}</div>
               <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                 {user?.email || "kullanici@example.com"}
               </div>
@@ -376,8 +394,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Çıkış Butonu */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
             onClick={handleSignOut}
           >
@@ -386,21 +404,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </Button>
         </div>
       </aside>
-      
+
       {/* Mobil Menü - Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 lg:hidden z-40"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
-      
+
       {/* Mobil Menü - Sidebar */}
-      <div className={`
+      <div
+        className={`
         fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-900 
         transform transition-transform duration-300 ease-in-out lg:hidden
         ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-      `}>
+      `}
+      >
         {/* Mobil Menü Başlık */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800">
           <Link href="/" className="flex items-center">
@@ -413,7 +433,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
-        
+
         {/* Mobil Menü İçeriği */}
         <ScrollArea className="h-[calc(100vh-4rem)]">
           <div className="p-4 space-y-6">
@@ -424,11 +444,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </div>
               <div className="flex-grow overflow-hidden">
                 <div className="font-medium truncate">
-  <Suspense fallback={<span className="animate-pulse text-slate-400">Yükleniyor...</span>}>
-    <UserProfileName userId={userId as string} />
-  </Suspense>
-</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || "kullanici@example.com"}</div>
+                  <Suspense
+                    fallback={
+                      <span className="animate-pulse text-slate-400">
+                        Yükleniyor...
+                      </span>
+                    }
+                  >
+                    <UserProfileName userId={userId as string} />
+                  </Suspense>
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {user?.email || "kullanici@example.com"}
+                </div>
               </div>
             </div>
             {/* Rol Seçimleri */}
@@ -446,13 +474,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         setMobileMenuOpen(false);
                       }}
                       className={`flex items-center justify-between p-2 rounded-md text-left w-full
-                        ${selectedRole === role ? "bg-slate-100 dark:bg-slate-800" : ""}
+                        ${
+                          selectedRole === role
+                            ? "bg-slate-100 dark:bg-slate-800"
+                            : ""
+                        }
                       `}
                     >
                       <div className="flex items-center gap-2">
                         {ROLE_ROUTES[role]?.icon}
                         <div>
-                          <div className="font-medium">{ROLE_ROUTES[role]?.label}</div>
+                          <div className="font-medium">
+                            {ROLE_ROUTES[role]?.label}
+                          </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">
                             {ROLE_ROUTES[role]?.description}
                           </div>
@@ -463,7 +497,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             )}
-            
+
             {/* Dashboard Menüsü */}
             <div>
               <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
@@ -488,7 +522,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               </div>
             </div>
-            
+
             {/* Seçili Rol Menüsü */}
             {selectedRole && ROLE_ROUTES[selectedRole]?.menuItems && (
               <div>
@@ -507,10 +541,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         {item.icon}
                         <span>{item.label}</span>
                       </span>
-                      
+
                       {item.badge && (
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-xs"
                         >
                           {item.badge}
@@ -521,7 +555,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             )}
-            
+
             {/* Genel Menü */}
             <div>
               <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
@@ -546,11 +580,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               </div>
             </div>
-            
+
             {/* Çıkış */}
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                 onClick={() => {
                   handleSignOut();
@@ -564,7 +598,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </ScrollArea>
       </div>
-      
+
       {/* Ana İçerik Alanı */}
       <div className="flex flex-col flex-grow min-h-0">
         {/* Mobil Header */}
@@ -577,12 +611,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             >
               <Menu className="h-5 w-5 text-slate-600 dark:text-slate-400" />
             </button>
-            
+
             {/* Logo */}
             <Link href="/dashboard" className="flex-grow flex justify-center">
               <Logo size="small" className="h-8" />
             </Link>
-            
+
             {/* Kullanıcı Menüsü */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -591,7 +625,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={handleSignOut}
                   className="text-red-500 dark:text-red-400 cursor-pointer"
                 >
@@ -602,12 +636,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </DropdownMenu>
           </div>
         </header>
-        
+
         {/* İçerik */}
         <main className="flex-grow p-4 md:p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto w-full">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto w-full">{children}</div>
         </main>
       </div>
     </div>
