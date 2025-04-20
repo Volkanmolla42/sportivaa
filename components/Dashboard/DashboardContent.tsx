@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { memo, useState, useEffect, useRef } from "react";
-import { useSupabaseRecord, useSupabaseQuery } from "@/hooks/useSupabaseQuery";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
@@ -80,45 +81,60 @@ function DashboardContent() {
   }, []);
 
   // Fetch user data with the custom hook
+  const userRecordQueryFn = React.useCallback(() => {
+    if (typeof userId !== "string" || !userId) {
+      return supabase.from("users").select().limit(0);
+    }
+    return supabase.from("users").select().eq("id", userId).single();
+  }, [userId]);
+
   const {
     data: userData,
     isLoading: isLoadingUser,
     error: userError,
-  } = useSupabaseRecord<{ first_name?: string; last_name?: string }>(
-    "users",
-    "id",
-    userId || ""
+  } = useSupabaseQuery<{ first_name?: string; last_name?: string }>(
+    userRecordQueryFn,
+    { enabled: !!userId }
   );
 
   // Fetch user gyms with the custom hook
-  const { data: memberGyms, isLoading: isLoadingMemberGyms } = useSupabaseQuery<
-    MemberGym[]
-  >(() =>
-    supabase
+  const memberGymsQueryFn = React.useCallback(() => {
+    if (!userId) return supabase.from("gym_users").select().limit(0);
+    return supabase
       .from("gym_users")
       .select("gym_id, gyms(name, city)")
-      .eq("user_id", userId || "")
-  );
+      .eq("user_id", userId);
+  }, [userId]);
+
+  const { data: memberGyms, isLoading: isLoadingMemberGyms } = useSupabaseQuery<
+    MemberGym[]
+  >(memberGymsQueryFn, { enabled: !!userId });
 
   // Fetch gyms managed by the user
-  const { data: ownedGyms, isLoading: isLoadingOwnedGyms } = useSupabaseQuery<
-    OwnedGym[]
-  >(() =>
-    supabase
+  const ownedGymsQueryFn = React.useCallback(() => {
+    if (!userId) return supabase.from("gyms").select().limit(0);
+    return supabase
       .from("gyms")
       .select("id, name, city")
-      .eq("owner_user_id", userId || "")
-  );
+      .eq("owner_user_id", userId);
+  }, [userId]);
+
+  const { data: ownedGyms, isLoading: isLoadingOwnedGyms } = useSupabaseQuery<
+    OwnedGym[]
+  >(ownedGymsQueryFn, { enabled: !!userId });
 
   // Fetch trainer profile - maybeSingle() kullanıyoruz, böylece kayıt yoksa hata oluşmaz
+  const trainerProfileQueryFn = React.useCallback(() => {
+    if (!userId) return supabase.from("trainers").select().limit(0).maybeSingle();
+    return supabase
+      .from("trainers")
+      .select("experience, specialty")
+      .eq("user_id", userId)
+      .maybeSingle();
+  }, [userId]);
+
   const { data: trainerProfile, isLoading: isLoadingTrainerProfile } =
-    useSupabaseQuery<TrainerProfileData>(() =>
-      supabase
-        .from("trainers")
-        .select("experience, specialty")
-        .eq("user_id", userId || "")
-        .maybeSingle()
-    );
+    useSupabaseQuery<TrainerProfileData>(trainerProfileQueryFn, { enabled: !!userId });
 
   // Show error toast when there's an error
   React.useEffect(() => {

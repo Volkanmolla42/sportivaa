@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 
 interface QueryState<T> {
   data: T | null;
@@ -10,9 +9,9 @@ interface QueryState<T> {
   error: Error | null;
 }
 
-type QueryOptions = {
+type QueryOptions<T = unknown> = {
   enabled?: boolean;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
   refetchInterval?: number | false;
 };
@@ -24,8 +23,8 @@ type QueryOptions = {
  * @returns Query state and refetch function
  */
 export function useSupabaseQuery<T>(
-  queryFn: () => PostgrestFilterBuilder<any, any, any[]>,
-  options: QueryOptions = {}
+  queryFn: () => PromiseLike<{data: unknown; error: unknown}>,
+  options: QueryOptions<T> = {}
 ) {
   const {
     enabled = true,
@@ -40,27 +39,36 @@ export function useSupabaseQuery<T>(
     error: null,
   });
 
-  // queryFn'i memoize edelim
-  const memoizedQueryFn = useCallback(queryFn, []);
+  // We don't memoize queryFn directly as it causes ESLint warnings
+  // Instead, we'll use it directly in fetchData
 
-  // fetchData fonksiyonunu memoize edelim ve bağımlılıkları azaltalım
+  // Define the fetchData function
   const fetchData = useCallback(async () => {
     if (!enabled) return;
 
-    // Sadece isLoading durumunu güncelle, diğer değerleri koru
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const { data, error } = await memoizedQueryFn();
+      const query = queryFn();
+      const result = await query;
+      // Supabase PostgrestResponse tipinde data ve error property'leri var
+      const data = (result as { data?: unknown }).data as T | null;
+      const error = (result as { error?: unknown }).error;
+
+      let errorMessage = "Unknown error";
+      if (error && typeof error === "object" && error !== null && "message" in error) {
+        errorMessage = (error as {message: string}).message;
+      }
 
       if (error) {
-        // Supabase'in "JSON object requested, multiple (or no) rows returned" hatasını daha iyi yönetelim
+        // Handle Supabase's "JSON object requested, multiple (or no) rows returned" error better
         if (
-          error.message.includes(
+          typeof errorMessage === "string" &&
+          errorMessage.includes(
             "JSON object requested, multiple (or no) rows returned"
           )
         ) {
-          // Bu durumda veri yok, hata fırlatmak yerine null döndürelim
+          // In this case there's no data, return null instead of throwing an error
           setState((prev) => {
             if (process.env.NODE_ENV === "development") {
               console.log(
@@ -71,16 +79,16 @@ export function useSupabaseQuery<T>(
           });
 
           if (onSuccess) {
-            onSuccess(null);
+            onSuccess(null as unknown as T);
           }
           return;
         } else {
-          // Diğer hatalar için normal hata fırlat
-          throw new Error(error.message);
+          // Throw normal error for other errors
+          throw new Error(errorMessage);
         }
       }
 
-      // setState'i bir kez çağıralım ve sadece development modunda log çıktısı verelim
+      // Call setState once and only log in development mode
       setState((prev) => {
         if (process.env.NODE_ENV === "development") {
           console.log("useSupabaseQuery: Data fetched successfully", {
@@ -90,15 +98,15 @@ export function useSupabaseQuery<T>(
         return { ...prev, data, isLoading: false, error: null };
       });
 
-      // onSuccess callback'i çağıralım
+      // Call onSuccess callback
       if (onSuccess) {
-        onSuccess(data);
+        onSuccess(data as T);
       }
     } catch (error) {
       const errorObj =
         error instanceof Error ? error : new Error(String(error));
 
-      // setState'i bir kez çağıralım ve sadece development modunda log çıktısı verelim
+      // Call setState once and only log in development mode
       setState((prev) => {
         if (process.env.NODE_ENV === "development") {
           console.error("useSupabaseQuery: Error fetching data", errorObj);
@@ -106,17 +114,15 @@ export function useSupabaseQuery<T>(
         return { ...prev, isLoading: false, error: errorObj };
       });
 
-      // onError callback'i çağıralım
+      // Call onError callback
       if (onError) {
         onError(errorObj);
       }
     }
-  }, [enabled, memoizedQueryFn]);
+  }, [enabled, queryFn, onSuccess, onError]);
 
-  // useEffect içinde fetchData'yı çağırıyoruz
-  // fetchData zaten memoize edildiği için sadece enabled değiştiğinde yeniden çalışacak
   useEffect(() => {
-    // Sadece enabled true ise veri çek
+    // Only fetch data if enabled is true
     if (enabled) {
       fetchData();
 
@@ -126,11 +132,11 @@ export function useSupabaseQuery<T>(
         return () => clearInterval(intervalId);
       }
     }
-  }, [fetchData, refetchInterval, enabled]);
+  }, [enabled, fetchData, refetchInterval]);
 
   return {
     ...state,
-    refetch: fetchData,
+    refetch: fetchData
   };
 }
 
@@ -146,10 +152,16 @@ export function useSupabaseRecord<T>(
   table: string,
   column: string,
   value: string | number,
-  options: QueryOptions = {}
+  options: QueryOptions<T> = {}
 ) {
   return useSupabaseQuery<T>(
-    () => supabase.from(table).select().eq(column, value).single(),
+    () => {
+      if (value === "" || value === undefined || value === null) {
+        // Don't make a Supabase query, return empty promise (with limit(0))
+        return supabase.from(table).select().limit(0) as PromiseLike<{data: unknown; error: unknown}>;
+      }
+      return supabase.from(table).select().eq(column, value).single() as PromiseLike<{data: unknown; error: unknown}>;
+    },
     options
   );
 }
@@ -166,13 +178,13 @@ export function useSupabaseRecords<T>(
   table: string,
   column?: string,
   value?: string | number,
-  options: QueryOptions = {}
+  options: QueryOptions<T[]> = {}
 ) {
   return useSupabaseQuery<T[]>(() => {
     let query = supabase.from(table).select();
     if (column && value !== undefined) {
       query = query.eq(column, value);
     }
-    return query;
+    return query as PromiseLike<{data: unknown; error: unknown}>;
   }, options);
 }

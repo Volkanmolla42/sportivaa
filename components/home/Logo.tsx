@@ -18,12 +18,16 @@ function Logo({ size = "default", className = "" }) {
         height={current.icon}
         src="/images/sportiva-only-logo.svg" 
         alt="Sportiva Logo" 
+        style={{ width: current.icon, height: "auto", aspectRatio: "1 / 1" }}
+        priority
       />
       <Image 
         width={current.brand.width} 
         height={current.brand.height}
         src="/images/sportiva-only-brand.svg" 
         alt="Sportiva Brand" 
+        style={{ width: current.brand.width, height: "auto" }}
+        priority
       />
     </div>
   );
