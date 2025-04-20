@@ -1,26 +1,7 @@
-"use client";
-
-import { useAuth } from "@/contexts/AuthContext";
-import { withRoleAccess } from "@/components/Dashboard/withRoleAccess";
+import { User } from "@/types/supabase";
 import DashboardTrainer from "@/components/Dashboard/DashboardTrainer";
 
-/**
- * Eğitmen dashboard sayfası
- * Rol kontrolü withRoleAccess HOC ile yapılıyor
- */
-export default function TrainerDashboardPage() {
-  // useAuth hook'u sadece üst seviyede çağrıldı, callback veya yardımcı fonksiyonlar içinde kullanılmıyor
-  // Herhangi bir implicit any tipi yok, userId tipi zaten tanımlı
-  const { user } = useAuth();
-  const userId = user?.id;
-  
-  // Rol erişim yüksek seviye bileşeniyle sarmalanmış eğitmen paneli
-  const TrainerDashboardWithAccess = withRoleAccess({
-    requiredRole: "Trainer",
-    Component: ({ userId }: { userId: string }) => <DashboardTrainer userId={userId} />,
-    navigateTo: "/dashboard"
-  });
-
-  // Eğitmen paneli ile rol erişim kontrolünü birleştir
-  return <TrainerDashboardWithAccess userId={userId} />;
+export default function TrainerDashboardPage({ user }: { user: User }) {
+  if (!user.is_trainer) return null;
+  return <DashboardTrainer userId={user.id} />;
 }

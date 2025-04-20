@@ -4,7 +4,6 @@ import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   User,
   Dumbbell,
@@ -133,13 +132,17 @@ const ROLE_ROUTES: Record<string, RoleInfo> = {
   },
 };
 
+import { User as DBUser } from "@/types/supabase";
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  user: DBUser;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, roles: ctxRoles, isLoading: authLoading, signOut } = useAuth();
-  const { selectedRole, setSelectedRole, isRoleLoading } = useRole();
+export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+  // Burada sadece prop ile gelen user kullanılacak
+  const { roles: ctxRoles, signOut } = useAuth();
+  const { selectedRole, setSelectedRole } = useRole();
   const router = useRouter();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -151,21 +154,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       .catch((err) => console.error("Çıkış yapılırken hata:", err));
   };
 
-  // Loading state
-  if (isRoleLoading || authLoading || !user || !selectedRole) {
-    return <DashboardLoadingSkeleton />;
-  }
-
   // Safe displayName extraction
-  const metadata = user.user_metadata as Record<string, unknown> | null;
   const displayName =
-    typeof metadata?.first_name === 'string'
-      ? metadata.first_name
-      : typeof metadata?.firstName === 'string'
-      ? metadata.firstName
-      : typeof metadata?.name === 'string'
-      ? metadata.name
-      : user.email?.split('@')[0] || '';
+    (user.first_name && user.last_name)
+      ? `${user.first_name} ${user.last_name}`.trim()
+      : 'Kullanıcı';
 
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
@@ -180,7 +173,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Role Selection */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-          <RoleSwitcher roles={ctxRoles} selectedRole={selectedRole} onChange={setSelectedRole} />
+          <RoleSwitcher roles={ctxRoles} selectedRole={selectedRole ?? ctxRoles[0]} onChange={setSelectedRole} />
         </div>
 
         {/* Menu Content */}
@@ -362,7 +355,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="p-4">
                 <RoleSwitcher
                   roles={ctxRoles}
-                  selectedRole={selectedRole}
+                  selectedRole={selectedRole ?? ctxRoles[0]}
                   onChange={(role) => {
                     setSelectedRole(role);
                     setMobileMenuOpen(false);
@@ -516,58 +509,3 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 }
 
-// Loading skeleton component
-export function DashboardLoadingSkeleton() {
-  return (
-    <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
-      {/* Desktop Sidebar Skeleton */}
-      <div className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-        <div className="p-4">
-          <Skeleton className="h-8 w-full mx-auto" />
-        </div>
-        <div className="flex-grow p-4 space-y-4">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-4 w-24 mb-2" />
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-          <Skeleton className="h-4 w-24 mt-4 mb-2" />
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </div>
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <Skeleton className="h-10 w-full" />
-        </div>
-      </div>
-
-      {/* Content Area Skeleton */}
-      <div className="flex flex-col flex-grow">
-        {/* Mobile Header Skeleton */}
-        <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between">
-          <Skeleton className="h-8 w-8 lg:hidden" />
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-8 rounded-full" />
-        </div>
-
-        {/* Main Content Skeleton */}
-        <main className="flex-grow p-6">
-          <div className="max-w-7xl mx-auto w-full space-y-6">
-            <Skeleton className="h-10 w-2/3" />
-            <Skeleton className="h-5 w-full max-w-md" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-32 rounded-xl" />
-              ))}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
