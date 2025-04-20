@@ -1,13 +1,24 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUserName, getGymsByManager } from "@/contexts/AuthContext";
-import type { User } from "@/types/supabase";
-import type { BasicUser } from "@/contexts/AuthContext";
+import { getGymsByManager } from "@/contexts/AuthContext";
+
 import GymDetail from "@/components/Dashboard/GymDetail";
 import WelcomeMessage from "./WelcomeMessage";
 
-export default function DashboardGymManager({ userId }: { userId: string }) {
-  const [user, setUser] = useState<(User & BasicUser) | null>(null);
+import { useAuth } from "@/contexts/AuthContext";
+import { useSupabaseRecord } from "@/hooks/useSupabaseQuery";
+
+export default function DashboardGymManager() {
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  // Fetch DB user info for first_name/last_name
+  const {
+    data: dbUser,
+    isLoading: isLoadingDbUser,
+    error: dbUserError,
+  } = useSupabaseRecord<import("@/types/supabase").User>("users", "id", userId ?? "");
+
   const [gyms, setGyms] = useState<
     { id: string; name: string; city: string }[]
   >([]);
@@ -18,20 +29,21 @@ export default function DashboardGymManager({ userId }: { userId: string }) {
   } | null>(null);
   useEffect(() => {
     async function fetchData() {
-      const userData = await getUserName(userId);
-      setUser({
-        ...userData,
-        is_trainer: false,
-        is_gymmanager: false,
-        created_at: "",
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-      });
+      if (!userId) return;
       const gymsData = await getGymsByManager(userId);
       setGyms(gymsData);
     }
     fetchData();
   }, [userId]);
+
+  // Show loading or unauthorized state if userId is not ready
+  if (!userId || isLoadingDbUser) {
+    return <div className="p-6 text-center text-muted-foreground">Kullanıcı bilgisi yükleniyor...</div>;
+  }
+
+  if (dbUserError) {
+    return <div className="p-6 text-center text-destructive">Kullanıcı verisi yüklenirken hata oluştu.</div>;
+  }
 
   if (selectedGym) {
     return <GymDetail gym={selectedGym} onBack={() => setSelectedGym(null)} />;
@@ -40,11 +52,11 @@ export default function DashboardGymManager({ userId }: { userId: string }) {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Salon Yöneticisi Paneli</h1>
-      {user && (
+      {dbUser && (
         <div className="mb-4">
           <WelcomeMessage
-            firstName={user.first_name || ""}
-            lastName={user.last_name || ""}
+            firstName={dbUser.first_name || ""}
+            lastName={dbUser.last_name || ""}
             role="GymManager"
           />
         </div>

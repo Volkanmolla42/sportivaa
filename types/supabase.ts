@@ -10,6 +10,7 @@ export type User = {
   is_gymmanager: boolean;
   email?: string | null;
   created_at: string;
+  avatar_url?: string | null;
 };
 
 export type Gym = {

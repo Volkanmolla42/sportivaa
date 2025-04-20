@@ -111,13 +111,11 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
 export async function createGym({
   name,
   city,
-  address,
   phone,
   owner_user_id,
 }: {
   name: string;
   city: string;
-  address: string;
   phone: string;
   owner_user_id: string;
 }): Promise<string> {
@@ -127,7 +125,6 @@ export async function createGym({
       .insert({
         name,
         city,
-        address,
         phone,
         owner_user_id,
       })

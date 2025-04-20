@@ -54,15 +54,19 @@ const GymsList = memo(
 
 GymsList.displayName = "GymsList";
 
-function DashboardMember({ userId }: { userId: string }) {
-  // Fetch user data with the custom hook
+import { useAuth } from "@/contexts/AuthContext";
+
+function DashboardMember() {
+  const { user: authUser } = useAuth();
+  const userId = authUser?.id;
+
+  // Hooks must be called unconditionally
   const {
-    data: user,
+    data: userData,
     isLoading: isLoadingUser,
     error: userError,
-  } = useSupabaseRecord<BasicUser>("users", "id", userId);
+  } = useSupabaseRecord<BasicUser>("users", "id", userId ?? "");
 
-  // Fetch user gyms with the custom hook
   const {
     data: gymsRaw,
     isLoading: isLoadingGyms,
@@ -70,11 +74,20 @@ function DashboardMember({ userId }: { userId: string }) {
   } = useSupabaseQuery<
     { gym_id: string; gym_name: string; gym_city: string }[]
   >(() =>
-    supabase
-      .from("gym_users")
-      .select("gym_id, gyms(name, city)")
-      .eq("user_id", userId)
+    userId
+      ? supabase
+          .from("gym_users")
+          .select("gym_id, gyms(name, city)")
+          .eq("user_id", userId)
+      : Promise.resolve({ data: null, error: null })
   );
+
+  // Show loading if userId is not ready
+  const isAuthLoading = !userId;
+  if (isAuthLoading) {
+    return <div className="p-6 text-center text-muted-foreground">Kullanıcı bilgisi yükleniyor...</div>;
+  }
+
 
   // Transform gym data
   const userGyms: Gym[] = gymsRaw
@@ -106,11 +119,11 @@ function DashboardMember({ userId }: { userId: string }) {
           <Skeleton className="h-12 w-64 mb-2" />
           <Skeleton className="h-4 w-full max-w-md" />
         </div>
-      ) : user ? (
+      ) : userData ? (
         <div className="mb-6">
           <WelcomeMessage
-            firstName={user.first_name || ""}
-            lastName={user.last_name || ""}
+            firstName={userData.first_name || ""}
+            lastName={userData.last_name || ""}
             role="Member"
           />
         </div>

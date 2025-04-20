@@ -1,11 +1,9 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
 import { queryKeys } from "@/lib/react-query";
 import { dataService } from "@/services/dataService";
-import { BasicUser, UserRole } from "@/contexts/AuthContext";
-import { Gym, Trainer } from "@/types/supabase";
+
 
 // User related hooks
 export function useUserProfile(userId: string | undefined) {
@@ -69,7 +67,6 @@ export function useCreateGym() {
     mutationFn: (gymData: {
       name: string;
       city: string;
-      address: string;
       phone: string;
       owner_user_id: string;
     }) => dataService.createGym(gymData),

@@ -1,23 +1,12 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { getUserName, getTrainerProfile } from "@/contexts/AuthContext";
-import type { User } from "@/types/supabase";
 import type { BasicUser } from "@/contexts/AuthContext";
 import WelcomeMessage from "./WelcomeMessage";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import TrainerRegisterForm from "@/components/Forms/RoleAddForm/TrainerRegisterForm";
 
-// Küçük, tekrar kullanılabilir bileşenler
-const TrainerWelcome = ({ user }: { user: User | BasicUser }) => (
-  <div className="mb-6">
-    <WelcomeMessage
-      firstName={user.first_name || ""}
-      lastName={user.last_name || ""}
-      role="Trainer"
-    />
-  </div>
-);
+
+
 
 const TrainerInfo = ({
   experience,
@@ -48,111 +37,90 @@ const TrainerFutureFeatures = () => (
   </div>
 );
 
-export default function DashboardTrainer({ userId }: { userId: string }) {
+import { useAuth } from "@/contexts/AuthContext";
+
+export default function DashboardTrainer() {
+  const { user } = useAuth(); // Supabase Auth user
+  const userId = user?.id;
+
   const [state, setState] = useState<{
-    user: (User & BasicUser) | null;
+    dbUser: BasicUser | null;
     trainerProfile: { experience: number; specialty: string } | null;
     isLoading: boolean;
     error: string | null;
   }>({
-    user: null,
+    dbUser: null,
     trainerProfile: null,
     isLoading: true,
     error: null,
   });
 
   const fetchData = useCallback(async () => {
+    if (!userId) return;
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const [userData, trainerData] = await Promise.all([
+      const [dbUserData, trainerData] = await Promise.all([
         getUserName(userId),
         getTrainerProfile(userId),
       ]);
       setState({
-        user: {
-          ...userData,
-          is_trainer: false,
-          is_gymmanager: false,
-          created_at: "",
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-        },
+        dbUser: dbUserData,
         trainerProfile: trainerData,
         isLoading: false,
         error: null,
       });
     } catch (err: unknown) {
       setState({
-        user: null,
+        dbUser: null,
         trainerProfile: null,
         isLoading: false,
-        error:
-          err && typeof err === "object" && "message" in err
-            ? (err as { message?: string }).message ||
-              "Kullanıcı bilgileri yüklenirken bir hata oluştu."
-            : "Kullanıcı bilgileri yüklenirken bir hata oluştu.",
+        error: err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu.",
       });
     }
   }, [userId]);
 
   useEffect(() => {
     fetchData();
-  }, [userId, fetchData]);
+  }, [fetchData]);
 
-  const { user, trainerProfile, isLoading, error } = state;
+  if (!userId) {
+    return <div className="p-6 text-center text-muted-foreground">Kullanıcı bilgisi yükleniyor...</div>;
+  }
+
+  if (state.isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <span className="animate-pulse text-muted-foreground">Yükleniyor...</span>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="p-6 text-center text-destructive">
+        Hata: {state.error}
+      </div>
+    );
+  }
+
+  const { dbUser, trainerProfile } = state;
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl font-bold mb-6">Eğitmen Paneli</h1>
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
-          {error}
-        </div>
+    <div className="space-y-6">
+      {dbUser && (
+        <WelcomeMessage
+          firstName={dbUser.first_name}
+          lastName={dbUser.last_name}
+          role="Trainer"
+        />
       )}
-      {isLoading ? (
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-40 mb-4" />
-          <Skeleton className="h-6 w-1/2 mb-2" />
-          <div className="p-4 rounded-lg border bg-card">
-            <Skeleton className="h-6 w-1/2 mb-2" />
-            <Skeleton className="h-4 w-full mb-4" />
-            <div className="flex gap-4">
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-10 w-32" />
-            </div>
-          </div>
-          <Skeleton className="h-24 w-full" />
-        </div>
-      ) : user ? (
-        <TrainerWelcome user={user} />
-      ) : null}
-
-      {!isLoading && (
-        <div className="space-y-6">
-          {!trainerProfile ? (
-            <div className="p-4 rounded-lg border bg-card">
-              <h2 className="text-xl font-semibold mb-4">
-                Eğitmen Profili Oluştur
-              </h2>
-              <p className="mb-4 text-muted-foreground">
-                Eğitmen olarak hizmet verebilmek için lütfen profil
-                bilgilerinizi tamamlayın.
-              </p>
-              <TrainerRegisterForm
-                userId={userId}
-                onComplete={() => fetchData()}
-              />
-            </div>
-          ) : (
-            <TrainerInfo
-              experience={trainerProfile.experience}
-              specialty={trainerProfile.specialty}
-            />
-          )}
-
-          <TrainerFutureFeatures />
-        </div>
+      {trainerProfile && (
+        <TrainerInfo
+          experience={trainerProfile.experience}
+          specialty={trainerProfile.specialty}
+        />
       )}
+      <TrainerFutureFeatures />
     </div>
   );
 }

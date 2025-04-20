@@ -47,6 +47,7 @@ create table public.users (
   is_trainer boolean not null default false,
   is_gymmanager boolean not null default false,
   email text null,
+  avatar_url text null,
   constraint users_pkey primary key (id),
   constraint users_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;

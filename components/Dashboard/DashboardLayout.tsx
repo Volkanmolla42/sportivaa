@@ -245,7 +245,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 </h2>
               </div>
               <Link
-                href="/dashboard/addnewrole"
+                href="/profile/addrole"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all"
               >
                 <User className="h-5 w-5" />
@@ -283,6 +283,17 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               </div>
             </div>
           </div>
+
+          {/* Add Role Button */}
+          <Link href="/profile/addrole" passHref>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 mb-2"
+            >
+              <User className="h-5 w-5" />
+              <span>Rol Ekle</span>
+            </Button>
+          </Link>
 
           {/* Logout Button */}
           <Button
@@ -429,7 +440,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               </h3>
               <div className="space-y-1">
                 <Link
-                  href="/dashboard/addnewrole"
+                  href="/profile/addrole"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 w-full"
                   onClick={() => setMobileMenuOpen(false)}
                 >
