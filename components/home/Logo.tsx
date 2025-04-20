@@ -5,14 +5,14 @@ import Image from "next/image";
 function Logo({ size = "default", className = "" }) {
   const sizes = {
     small: { icon: 16, brand: { width: 90, height: 40 } },
-    default: { icon: 22, brand: { width: 120, height: 60 } },
-    large: { icon: 28, brand: { width: 200, height: 200 } }
+    default: { icon: 28, brand: { width: 160, height: 80 } },
+    large: { icon: 36, brand: { width: 200, height: 100 } }
   };
 
   const current = sizes[size as keyof typeof sizes];
 
   return (
-    <div className={`items-center flex gap-3 ${className}`}>
+    <div className={`flex items-end transition-all duration-300 ${className}`}>
       <Image 
         width={current.icon} 
         height={current.icon}
