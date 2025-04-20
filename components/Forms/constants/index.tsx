@@ -29,7 +29,6 @@ export const ROLE_INFO: Record<string, RoleInfo> = {
     requirements: [
       "Deneyim yılı bilgisi",
       "Uzmanlık alanı",
-      "Sertifikalar (isteğe bağlı)"
     ]
   },
   GymManager: {
@@ -51,7 +50,7 @@ export const ROLE_INFO: Record<string, RoleInfo> = {
 };
 
 /**
- * Specialty options for trainers 
+ * Specialty options for trainers
  */
 export const SPECIALTY_OPTIONS = [
   "Fitness",
