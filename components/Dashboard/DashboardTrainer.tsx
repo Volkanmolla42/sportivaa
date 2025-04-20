@@ -6,7 +6,7 @@ import type { BasicUser } from "@/contexts/AuthContext";
 import WelcomeMessage from "./WelcomeMessage";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import TrainerRegisterForm from "@/components/Forms/TrainerRegisterForm";
+import TrainerRegisterForm from "@/components/Forms/RoleAddForm/TrainerRegisterForm";
 
 // Küçük, tekrar kullanılabilir bileşenler
 const TrainerWelcome = ({ user }: { user: User | BasicUser }) => (

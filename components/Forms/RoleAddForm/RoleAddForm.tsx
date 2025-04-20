@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import { dataService } from "@/services/dataService";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ROLE_INFO, SPECIALTY_OPTIONS, CITIES, getAvailableRoles } from "./RoleAddForm/constants";
+import { ROLE_INFO, SPECIALTY_OPTIONS, CITIES, getAvailableRoles } from "./constants";
 
 
 export default function RoleAddForm() {

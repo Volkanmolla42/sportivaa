@@ -542,7 +542,7 @@ const RolesSection = memo(() => {
             </CardContent>
             <CardFooter>
               <Button asChild>
-                <Link href="/dashboard/roles/add">Rol Ekle</Link>
+                <Link href="/dashboard/addnewrole">Rol Ekle</Link>
               </Button>
             </CardFooter>
           </Card>
