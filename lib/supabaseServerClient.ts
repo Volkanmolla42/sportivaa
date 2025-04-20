@@ -1,20 +1,22 @@
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import type { Database } from "@/types/supabase";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export async function createServerSupabaseClient() {
-  // Next.js 15+ ile cookies() artık asenkron! Await etmelisin.
+export const createSupabaseServerClient = async () => {
   const cookieStore = await cookies();
-  // Tüm cookie'leri string olarak birleştir
-  const cookieString = cookieStore.getAll().map(({ name, value }) => `${name}=${value}`).join('; ');
-  console.log("[supabaseServerClient] Cookie string:", cookieString);
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Cookie: cookieString,
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookies) => {
+          cookies.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
       },
-    },
-  });
-}
+    }
+  );
+};
+

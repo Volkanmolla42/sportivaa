@@ -38,3 +38,15 @@ export type Trainer = {
 // İlişkili tipler
 export type UserWithGyms = User & { gyms: Gym[] };
 export type GymWithMembers = Gym & { members: User[] };
+
+// Supabase ana Database tipi (DRY için tek kaynak!)
+export type Database = {
+  public: {
+    Tables: {
+      users: { Row: User };
+      gyms: { Row: Gym };
+      gym_users: { Row: GymUser };
+      trainers: { Row: Trainer };
+    };
+  };
+};

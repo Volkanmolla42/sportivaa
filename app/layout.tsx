@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "Sportiva | Dijital Spor Platformu",
   description:
     "Spor salonları, eğitmenler ve üyeler için dijital platform. Rezervasyon, takip, analiz ve daha fazlası.",

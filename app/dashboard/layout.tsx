@@ -1,19 +1,12 @@
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 
 export default async function DashboardRootLayout({ children }: { children: ReactNode }) {
-  const supabase = await createServerSupabaseClient();
-  const { data, error: userError } = await supabase.auth.getUser();
-  const user = data?.user;
-  const sessionResult = await supabase.auth.getSession();
-  console.log("[dashboard/layout] supabase.auth.getUser user:", user);
-  console.log("[dashboard/layout] supabase.auth.getSession result:", sessionResult);
-  if (userError || !user) {
-    console.error("[dashboard/layout] No user found, redirecting to /auth", userError);
-    redirect("/auth");
-  }
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth");
   const { data: dbUser, error } = await supabase
     .from("users")
     .select("*")
