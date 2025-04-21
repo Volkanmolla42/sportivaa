@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { getUserName, getTrainerProfile } from "@/contexts/AuthContext";
 import type { BasicUser } from "@/contexts/AuthContext";
 import WelcomeMessage from "./WelcomeMessage";
@@ -55,33 +55,31 @@ export default function DashboardTrainer() {
     error: null,
   });
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
     if (!userId) return;
     setState((prev) => ({ ...prev, isLoading: true }));
-    try {
-      const [dbUserData, trainerData] = await Promise.all([
-        getUserName(userId),
-        getTrainerProfile(userId),
-      ]);
-      setState({
-        dbUser: dbUserData,
-        trainerProfile: trainerData,
-        isLoading: false,
-        error: null,
-      });
-    } catch (err: unknown) {
-      setState({
-        dbUser: null,
-        trainerProfile: null,
-        isLoading: false,
-        error: err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu.",
-      });
-    }
+    (async () => {
+      try {
+        const [dbUserData, trainerData] = await Promise.all([
+          getUserName(userId),
+          getTrainerProfile(userId),
+        ]);
+        setState({
+          dbUser: dbUserData,
+          trainerProfile: trainerData,
+          isLoading: false,
+          error: null,
+        });
+      } catch (err: unknown) {
+        setState({
+          dbUser: null,
+          trainerProfile: null,
+          isLoading: false,
+          error: err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu.",
+        });
+      }
+    })();
   }, [userId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   if (!userId) {
     return <div className="p-6 text-center text-muted-foreground">Kullanıcı bilgisi yükleniyor...</div>;

@@ -1,5 +1,5 @@
 "use client";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useSupabaseRecord, useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gym } from "@/types/supabase";
@@ -65,7 +65,21 @@ function DashboardMember() {
     data: userData,
     isLoading: isLoadingUser,
     error: userError,
-  } = useSupabaseRecord<BasicUser>("users", "id", userId ?? "");
+  } = useSupabaseRecord<BasicUser>(
+    "users",
+    "id",
+    userId ?? "",
+    { enabled: !!userId }
+  );
+
+  // queryFn referansını sabit tutmak için useCallback kullan
+  const gymsQueryFn = useCallback(() => {
+    if (!userId) return supabase.from("gym_users").select().limit(0);
+    return supabase
+      .from("gym_users")
+      .select("gym_id, gyms(name, city)")
+      .eq("user_id", userId);
+  }, [userId]);
 
   const {
     data: gymsRaw,
@@ -73,19 +87,11 @@ function DashboardMember() {
     error: gymsError,
   } = useSupabaseQuery<
     { gym_id: string; gym_name: string; gym_city: string }[]
-  >(() =>
-    userId
-      ? supabase
-          .from("gym_users")
-          .select("gym_id, gyms(name, city)")
-          .eq("user_id", userId)
-      : Promise.resolve({ data: null, error: null })
-  );
+  >(gymsQueryFn, { enabled: !!userId });
 
   // Show loading if userId is not ready
-  const isAuthLoading = !userId;
-  if (isAuthLoading) {
-    return <div className="p-6 text-center text-muted-foreground">Kullanıcı bilgisi yükleniyor...</div>;
+  if (!userId || isLoadingUser || isLoadingGyms) {
+    return <div className="p-6 text-center text-muted-foreground">Kullanıcı ve salon bilgisi yükleniyor...</div>;
   }
 
 

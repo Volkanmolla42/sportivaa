@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext } from "react";
 import type { User } from "@supabase/supabase-js";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import type { Gym, Trainer } from "@/types/supabase";
@@ -45,8 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   // Use the custom hook for Supabase authentication
   const auth = useSupabaseAuth();
-  const memoizedAuth = useMemo(() => auth, [auth]);
-  return <AuthContext.Provider value={memoizedAuth}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
 // Types for Dashboard data helpers
