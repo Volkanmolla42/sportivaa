@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
+import type { UserRole } from "@/contexts/AuthContext";
 import {
   User,
   Dumbbell,
@@ -140,25 +141,23 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
-  // Burada sadece prop ile gelen user kullanılacak
+  // Use RoleContext correctly
   const { roles: ctxRoles, signOut } = useAuth();
   const { selectedRole, setSelectedRole } = useRole();
   const router = useRouter();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Sign out function
-  const handleSignOut = () => {
-    signOut()
-      .then(() => router.push("/"))
-      .catch((err) => console.error("Çıkış yapılırken hata:", err));
-  };
-
   // Safe displayName extraction
-  const displayName =
-    (user.first_name && user.last_name)
-      ? `${user.first_name} ${user.last_name}`.trim()
-      : 'Kullanıcı';
+  const displayName = (user.first_name && user.last_name)
+    ? `${user.first_name} ${user.last_name}`.trim()
+    : 'Kullanıcı';
+
+  // Handle role change
+  const handleRoleChange = React.useCallback((role: UserRole) => {
+    setSelectedRole(role);
+    setMobileMenuOpen(false);
+  }, [setSelectedRole]);
 
   return (
     <div className="flex h-screen flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
@@ -173,7 +172,11 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
         {/* Role Selection */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-          <RoleSwitcher roles={ctxRoles} selectedRole={selectedRole ?? ctxRoles[0]} onChange={setSelectedRole} />
+          <RoleSwitcher
+            roles={ctxRoles}
+            selectedRole={selectedRole ?? ctxRoles[0]}
+            onChange={handleRoleChange}
+          />
         </div>
 
         {/* Menu Content */}
@@ -272,7 +275,6 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
         {/* User Profile and Logout */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           {/* User Information */}
-          <div className="flex items-center mb-3 px-2">
             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mr-3">
               <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
             </div>
@@ -299,7 +301,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           <Button
             variant="ghost"
             className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-            onClick={handleSignOut}
+            onClick={signOut}
           >
             <LogOut className="h-5 w-5" />
             <span>Çıkış Yap</span>
@@ -366,11 +368,8 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               <div className="p-4">
                 <RoleSwitcher
                   roles={ctxRoles}
-                  selectedRole={selectedRole ?? ctxRoles[0]}
-                  onChange={(role) => {
-                    setSelectedRole(role);
-                    setMobileMenuOpen(false);
-                  }}
+                  selectedRole={currentRole ?? ctxRoles[0]}
+                  onChange={handleRoleChange}
                 />
               </div>
             )}
@@ -401,13 +400,13 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
             </div>
 
             {/* Selected Role Menu */}
-            {selectedRole && ROLE_ROUTES[selectedRole]?.menuItems && (
+            {currentRole && ROLE_ROUTES[currentRole]?.menuItems && (
               <div>
                 <h3 className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                  {ROLE_ROUTES[selectedRole]?.label.toUpperCase()} MENÜSÜ
+                  {ROLE_ROUTES[currentRole]?.label.toUpperCase()} MENÜSÜ
                 </h3>
                 <div className="space-y-1">
-                  {ROLE_ROUTES[selectedRole].menuItems.map((item, index) => (
+                  {ROLE_ROUTES[currentRole].menuItems.map((item, index) => (
                     <Link
                       key={index}
                       href={item.path}
@@ -472,7 +471,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 variant="ghost"
                 className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                 onClick={() => {
-                  handleSignOut();
+                  signOut();
                   setMobileMenuOpen(false);
                 }}
               >

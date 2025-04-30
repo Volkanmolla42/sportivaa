@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ReactQueryProvider } from "@/lib/react-query";
+import { RoleProvider } from "@/contexts/RoleContext";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,17 +85,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ReactQueryProvider>
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
-          </ReactQueryProvider>
-        </ThemeProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ReactQueryProvider>
+              <AuthProvider>
+                <RoleProvider>
+                  {children}
+                  <Toaster />
+                </RoleProvider>
+              </AuthProvider>
+            </ReactQueryProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

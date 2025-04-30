@@ -38,12 +38,31 @@ export default function RoleSwitcher({
   selectedRole,
   onChange,
 }: RoleSwitcherProps) {
-  if (roles.length === 0) return null;
+  // Convert any role value to UserRole type safely
+  const handleRoleChange = React.useCallback((value: string) => {
+    // Type guard to ensure value is a valid UserRole
+    const isValidRole = (val: string): val is UserRole => {
+      return ["Member", "Trainer", "GymManager"].includes(val);
+    };
+
+    if (!isValidRole(value)) {
+      console.error('RoleSwitcher: Invalid role value:', value);
+      return;
+    }
+
+    try {
+      onChange(value);
+    } catch (error) {
+      console.error('RoleSwitcher: Error calling onChange:', error);
+    }
+  }, [onChange]);
+
+  if (!roles || roles.length === 0) return null;
 
   return (
     <Select
       value={selectedRole}
-      onValueChange={(value) => onChange(value as UserRole)}
+      onValueChange={handleRoleChange}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Rol seçin" />

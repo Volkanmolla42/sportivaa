@@ -1,57 +1,64 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
+import type { UserRole } from "./AuthContext";
 
 interface RoleContextType {
-  selectedRole: UserRole | null;
+  roles: UserRole[];
+  selectedRole: UserRole;
   setSelectedRole: (role: UserRole) => void;
-  isRoleLoading: boolean;
+  isLoading: boolean;
+  hasRole: (role: UserRole) => boolean;
 }
 
-const RoleContext = createContext<RoleContextType>({
-  selectedRole: null,
-  setSelectedRole: () => {},
-  isRoleLoading: true,
-});
+const RoleContext = createContext<RoleContextType | null>(null);
 
-export const useRole = () => useContext(RoleContext);
+export function RoleProvider({ children }: { children: React.ReactNode }) {
+  const { user, roles: authRoles, isLoading: authLoading } = useAuth();
+  const [selectedRole, setSelectedRole] = useState<UserRole>("Member");
+  const [roles, setRoles] = useState<UserRole[]>([]);
 
-export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { roles, isLoading: authLoading } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [isRoleLoading, setIsRoleLoading] = useState(true);
-
-  // Initialize selected role from available roles when auth is ready
   useEffect(() => {
-    if (!authLoading && roles.length > 0 && !selectedRole) {
-      setSelectedRole(roles[0]);
-      setIsRoleLoading(false);
-    } else if (!authLoading) {
-      setIsRoleLoading(false);
+    if (!authLoading && authRoles.length > 0) {
+      setRoles(authRoles);
+      // Set selected role to the highest privilege role available
+      if (authRoles.includes("GymManager")) {
+        setSelectedRole("GymManager");
+      } else if (authRoles.includes("Trainer")) {
+        setSelectedRole("Trainer");
+      } else {
+        setSelectedRole("Member");
+      }
+    } else if (!authLoading && !user) {
+      setRoles([]);
+      setSelectedRole("Member");
     }
-  }, [authLoading, roles, selectedRole]);
+  }, [user, authRoles, authLoading]);
 
-  // Handle role change
-  const handleRoleChange = (role: UserRole) => {
-    if (roles.includes(role)) {
-      setSelectedRole(role);
-    } else {
-      console.error(`Role ${role} is not available for this user`);
-    }
+  const hasRole = (role: UserRole): boolean => {
+    return roles.includes(role);
   };
 
   return (
     <RoleContext.Provider
       value={{
+        roles,
         selectedRole,
-        setSelectedRole: handleRoleChange,
-        isRoleLoading,
+        setSelectedRole,
+        isLoading: authLoading,
+        hasRole,
       }}
     >
       {children}
     </RoleContext.Provider>
   );
-};
+}
+
+export function useRole() {
+  const context = useContext(RoleContext);
+  if (!context) {
+    throw new Error("useRole must be used within a RoleProvider");
+  }
+  return context;
+}

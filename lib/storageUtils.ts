@@ -1,27 +1,43 @@
 "use client";
 
+import { BasicUser } from "@/contexts/AuthContext";
+
+// Storage keys
+const STORAGE_KEYS = {
+  PENDING_USER: "pendingUser",
+  USER_PREFERENCES: "userPreferences",
+  STORAGE_TEST: "__storage_test__",
+} as const;
+
 /**
- * Utility functions for working with localStorage
- * These functions are safe to use in both client and server environments
+ * Check if localStorage is available
  */
+export function isStorageAvailable(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.STORAGE_TEST, STORAGE_KEYS.STORAGE_TEST);
+    localStorage.removeItem(STORAGE_KEYS.STORAGE_TEST);
+    return true;
+  } catch (error) {
+    console.error("Error checking localStorage availability:", error);
+    return false;
+  }
+}
 
 /**
  * Safely get an item from localStorage
- * @param key The key to get from localStorage
- * @param defaultValue The default value to return if the key doesn't exist
- * @returns The value from localStorage or the default value
  */
 export function getStorageItem<T>(key: string, defaultValue: T): T {
-  if (typeof window === "undefined") {
+  if (!isStorageAvailable()) {
     return defaultValue;
   }
 
   try {
     const item = localStorage.getItem(key);
-    if (item === null) {
-      return defaultValue;
-    }
-    return JSON.parse(item) as T;
+    return item ? (JSON.parse(item) as T) : defaultValue;
   } catch (error) {
     console.error(`Error getting item ${key} from localStorage:`, error);
     return defaultValue;
@@ -30,12 +46,9 @@ export function getStorageItem<T>(key: string, defaultValue: T): T {
 
 /**
  * Safely set an item in localStorage
- * @param key The key to set in localStorage
- * @param value The value to set
- * @returns true if the operation was successful, false otherwise
  */
 export function setStorageItem<T>(key: string, value: T): boolean {
-  if (typeof window === "undefined") {
+  if (!isStorageAvailable()) {
     return false;
   }
 
@@ -50,11 +63,9 @@ export function setStorageItem<T>(key: string, value: T): boolean {
 
 /**
  * Safely remove an item from localStorage
- * @param key The key to remove from localStorage
- * @returns true if the operation was successful, false otherwise
  */
 export function removeStorageItem(key: string): boolean {
-  if (typeof window === "undefined") {
+  if (!isStorageAvailable()) {
     return false;
   }
 
@@ -68,57 +79,51 @@ export function removeStorageItem(key: string): boolean {
 }
 
 /**
- * Check if localStorage is available
- * @returns true if localStorage is available, false otherwise
+ * Save pending user data during signup flow
  */
-export function isStorageAvailable(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    const testKey = "__storage_test__";
-    localStorage.setItem(testKey, testKey);
-    localStorage.removeItem(testKey);
-    return true;
-  } catch (error) {
-    console.error("Error checking localStorage availability:", error);
-    // Herhangi bir hata durumunda false döndür
-    return false;
-  }
+export function savePendingUserData(userData: BasicUser): boolean {
+  return setStorageItem(STORAGE_KEYS.PENDING_USER, userData);
 }
 
 /**
- * Pending user data interface
+ * Get pending user data saved during signup
  */
-export interface PendingUserData {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+export function getPendingUserData(): BasicUser | null {
+  return getStorageItem<BasicUser | null>(STORAGE_KEYS.PENDING_USER, null);
 }
 
 /**
- * Save pending user data to localStorage
- * @param userData The user data to save
- * @returns true if the operation was successful, false otherwise
- */
-export function savePendingUserData(userData: PendingUserData): boolean {
-  return setStorageItem("pendingUserData", userData);
-}
-
-/**
- * Get pending user data from localStorage
- * @returns The pending user data or null if it doesn't exist
- */
-export function getPendingUserData(): PendingUserData | null {
-  return getStorageItem<PendingUserData | null>("pendingUserData", null);
-}
-
-/**
- * Remove pending user data from localStorage
- * @returns true if the operation was successful, false otherwise
+ * Remove pending user data after successful signup
  */
 export function removePendingUserData(): boolean {
-  return removeStorageItem("pendingUserData");
+  return removeStorageItem(STORAGE_KEYS.PENDING_USER);
+}
+
+/**
+ * Update user preferences in local storage
+ */
+export function updateUserPreferences(preferences: Record<string, unknown>): boolean {
+  const currentPrefs = getUserPreferences();
+  return setStorageItem(STORAGE_KEYS.USER_PREFERENCES, { ...currentPrefs, ...preferences });
+}
+
+/**
+ * Get user preferences from local storage
+ */
+export function getUserPreferences(): Record<string, unknown> {
+  return getStorageItem<Record<string, unknown>>(STORAGE_KEYS.USER_PREFERENCES, {});
+}
+
+/**
+ * Clear all user-related data from storage
+ */
+export function clearUserData(): void {
+  if (!isStorageAvailable()) return;
+
+  try {
+    removeStorageItem(STORAGE_KEYS.PENDING_USER);
+    removeStorageItem(STORAGE_KEYS.USER_PREFERENCES);
+  } catch (error) {
+    console.error("Error clearing user data:", error);
+  }
 }

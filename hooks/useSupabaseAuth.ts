@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/contexts/AuthContext";
@@ -18,19 +18,17 @@ interface UseSupabaseAuthReturn {
 }
 
 /**
- * Custom hook for Supabase authentication
- * @returns Authentication state and methods
+ * Custom hook for Supabase authentication with improved error handling and state management
  */
 export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isInitialized = useRef(false);
 
   /**
-   * Fetch user roles from the database
-   * @param userId User ID
-   * @returns Array of user roles
+   * Fetch user roles from the database with error handling
    */
   const fetchRoles = useCallback(async (userId: string): Promise<UserRole[]> => {
     try {
@@ -49,63 +47,48 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       return userRoles;
     } catch (error) {
       console.error("Error fetching user roles:", error);
-      return ["Member"]; // Default to Member role if there's an error
+      return ["Member"];
     }
   }, []);
 
   /**
-   * Refresh the authentication state
+   * Refresh authentication state
    */
   const refresh = useCallback(async (): Promise<void> => {
-    console.log("Auth: Refreshing authentication state...");
-    setIsLoading(true);
+    if (!isInitialized.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
-      console.log("Auth: Fetching session from Supabase...");
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error("Auth: Session error:", sessionError);
-        throw sessionError;
-      }
+      if (sessionError) throw sessionError;
 
       const currentUser = session?.user ?? null;
-      console.log("Auth: Session result:", {
-        hasSession: !!session,
-        hasUser: !!currentUser,
-        userId: currentUser?.id ? `${currentUser.id.substring(0, 8)}...` : null,
-        email: currentUser?.email
-      });
-
       setUser(currentUser);
 
       if (currentUser) {
-        console.log("Auth: Fetching roles for user...");
         const userRoles = await fetchRoles(currentUser.id);
-        console.log("Auth: User roles:", userRoles);
         setRoles(userRoles);
       } else {
-        console.log("Auth: No user, clearing roles");
         setRoles([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("Auth: Error refreshing auth state:", errorMessage);
       setError(errorMessage);
     } finally {
-      console.log("Auth: Refresh completed, isLoading set to false");
       setIsLoading(false);
+      isInitialized.current = true;
     }
   }, [fetchRoles]);
 
   /**
    * Sign in with email and password
-   * @param email User email
-   * @param password User password
-   * @returns Authentication data
    */
   const signIn = async (email: string, password: string) => {
+    if (!isInitialized.current) {
+      await refresh();
+    }
     setIsLoading(true);
     setError(null);
 
@@ -115,10 +98,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         password,
       });
 
-      if (error) {
-        setError(error.message);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data.user) {
         setUser(data.user);
@@ -138,17 +118,20 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
   /**
    * Sign up with email, password, and user details
-   * @param email User email
-   * @param password User password
-   * @param firstName User first name
-   * @param lastName User last name
    */
-  const signUp = async (email: string, password: string, firstName: string, lastName: string): Promise<void> => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string
+  ): Promise<void> => {
+    if (!isInitialized.current) {
+      await refresh();
+    }
     setIsLoading(true);
     setError(null);
 
     try {
-      // Create the user in Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -163,7 +146,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       if (error) throw error;
 
       if (data.user) {
-        // Save user data to localStorage for later insertion into the database
         savePendingUserData({
           id: data.user.id,
           first_name: firstName,
@@ -172,15 +154,15 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         });
 
         setUser(data.user);
-        setRoles(["Member"]); // Default role for new users
+        setRoles(["Member"]);
       }
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
-        : "Bilinmeyen bir hata oluştu";
+        : "Kayıt sırasında bir hata oluştu";
 
       setError(errorMessage);
-      console.error("Kayıt işlemi sırasında hata:", error);
+      console.error("Registration error:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -192,6 +174,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
    */
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
+    setError(null);
 
     try {
       await supabase.auth.signOut();
@@ -204,27 +187,24 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         : "Çıkış yapılırken bir hata oluştu";
 
       setError(errorMessage);
-      console.error("Çıkış yapılırken hata:", error);
+      console.error("Sign out error:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initialize auth state on mount
+  // Initialize auth state and set up auth state change listener
   useEffect(() => {
-    console.log("Auth: Initializing auth state on mount");
     refresh();
 
-    // Set up auth state change listener
-    console.log("Auth: Setting up auth state change listener");
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(`Auth: Auth state changed - Event: ${event}, Has session: ${!!session}`);
-      refresh();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      if (isInitialized.current) {
+        refresh();
+      }
     });
 
-    // Clean up listener on unmount
     return () => {
-      console.log("Auth: Cleaning up auth state change listener");
       listener.subscription.unsubscribe();
     };
   }, [refresh]);

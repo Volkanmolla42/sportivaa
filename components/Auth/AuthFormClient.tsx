@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModeImage from "../../app/auth/AuthModeImage";
@@ -29,6 +29,13 @@ export default function AuthFormClient() {
   const [mode, setMode] = useState<Mode>(
     searchParams.get("mode") === "register" ? "register" : "login"
   );
+  const { signIn, signUp, isLoading, error: authError } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const isRedirecting = useRef(false);
 
   // Update URL without full page navigation when mode changes
   const updateMode = useCallback((newMode: Mode) => {
@@ -38,87 +45,36 @@ export default function AuthFormClient() {
     window.history.pushState({}, "", url);
   }, []);
 
-  const { signIn, signUp, isLoading, error } = useAuth();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+
     try {
+      if (isRedirecting.current) return;
+
       if (mode === "login") {
-        try {
-          // Önce normal giriş yapmayı dene
-          await signIn(email, password);
-          // Giriş başarılı olduğunda dashboard'a yönlendir
-          router.replace("/dashboard");
-        } catch (loginError: unknown) {
-          // Error tipini kontrol et
-          const error = loginError as { message?: string };
-          // Eğer hata "Invalid login credentials" ise, kullanıcı yok demektir
-          if (error?.message?.includes("Invalid login credentials")) {
-            // Kullanıcıya bilgi ver
-            const confirmRegister = window.confirm(
-              "Bu e-posta adresi ile kayıtlı bir hesap bulunamadı. Yeni bir hesap oluşturmak ister misiniz?"
-            );
-
-            if (confirmRegister) {
-              // Kullanıcı adı ve soyadı için prompt göster
-              const userFirstName = window.prompt("Adınız:") || "";
-              const userLastName = window.prompt("Soyadınız:") || "";
-
-              // Boşlukları temizle
-              const trimmedFirstName = userFirstName.trim();
-              const trimmedLastName = userLastName.trim();
-
-              if (trimmedFirstName && trimmedLastName) {
-                console.log("Otomatik kayıt başlıyor:", {
-                  email,
-                  firstName: trimmedFirstName,
-                  lastName: trimmedLastName,
-                });
-
-                // Kayıt işlemini başlat
-                await signUp(
-                  email,
-                  password,
-                  trimmedFirstName,
-                  trimmedLastName
-                );
-
-                // Kayıt başarılı olduğunda dashboard'a yönlendir
-                router.replace("/dashboard");
-              } else {
-                // Kullanıcı adı veya soyadı girilmediyse uyarı ver
-                alert("Kayıt için ad ve soyad bilgilerinizi girmelisiniz.");
-              }
-            }
-          } else {
-            // Başka bir hata varsa tekrar fırlat
-            throw error;
-          }
+        const result = await signIn(email, password);
+        if (result?.user) {
+          isRedirecting.current = true;
+          router.push("/dashboard");
         }
       } else {
-        // Normal kayıt işlemi
-        // Boşlukları temizle
+        // Register mode
         const trimmedFirstName = firstName.trim();
         const trimmedLastName = lastName.trim();
 
-        console.log("Normal kayıt başlıyor:", {
-          email,
-          firstName: trimmedFirstName,
-          lastName: trimmedLastName,
-        });
+        if (!trimmedFirstName || !trimmedLastName) {
+          setError("Ad ve soyad alanları zorunludur.");
+          return;
+        }
 
         await signUp(email, password, trimmedFirstName, trimmedLastName);
-        // Kayıt başarılı olduğunda dashboard'a yönlendir
-        router.replace("/dashboard");
+        isRedirecting.current = true;
+        router.push("/dashboard");
       }
-    } catch (error) {
-      console.error("Auth error:", error);
-      // Hata AuthContext'te işleniyor
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bir hata oluştu");
+      isRedirecting.current = false;
     }
   };
 

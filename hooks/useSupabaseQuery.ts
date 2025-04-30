@@ -14,13 +14,11 @@ type QueryOptions<T = unknown> = {
   onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
   refetchInterval?: number | false;
+  select?: (data: any) => T;
 };
 
 /**
- * A custom hook for fetching data from Supabase with built-in state management
- * @param queryFn Function that returns a Supabase query
- * @param options Query options
- * @returns Query state and refetch function
+ * A custom hook for fetching data from Supabase with improved error handling
  */
 export function useSupabaseQuery<T>(
   queryFn: () => PromiseLike<{data: unknown; error: unknown}>,
@@ -31,6 +29,7 @@ export function useSupabaseQuery<T>(
     onSuccess,
     onError,
     refetchInterval = false,
+    select,
   } = options;
 
   const [state, setState] = useState<QueryState<T>>({
@@ -39,94 +38,76 @@ export function useSupabaseQuery<T>(
     error: null,
   });
 
-  // We don't memoize queryFn directly as it causes ESLint warnings
-  // Instead, we'll use it directly in fetchData
-
-  // Define the fetchData function
   const fetchData = useCallback(async () => {
     if (!enabled) return;
 
-    setState((prev) => ({ ...prev, isLoading: true }));
+    setState(prev => ({ ...prev, isLoading: true }));
 
     try {
       const query = queryFn();
       const result = await query;
-      // Supabase PostgrestResponse tipinde data ve error property'leri var
-      const data = (result as { data?: unknown }).data as T | null;
+      const data = (result as { data?: unknown }).data;
       const error = (result as { error?: unknown }).error;
 
-      let errorMessage = "Unknown error";
-      if (error && typeof error === "object" && error !== null && "message" in error) {
-        errorMessage = (error as {message: string}).message;
-      }
-
       if (error) {
-        // Handle Supabase's "JSON object requested, multiple (or no) rows returned" error better
+        let errorMessage = "Unknown error";
+        if (error && typeof error === "object" && error !== null && "message" in error) {
+          errorMessage = (error as {message: string}).message;
+        }
+
+        // Handle Supabase's "no rows returned" error gracefully
         if (
           typeof errorMessage === "string" &&
-          errorMessage.includes(
-            "JSON object requested, multiple (or no) rows returned"
-          )
+          errorMessage.includes("JSON object requested, multiple (or no) rows returned")
         ) {
-          // In this case there's no data, return null instead of throwing an error
-          setState((prev) => {
-            if (process.env.NODE_ENV === "development") {
-              console.log(
-                "useSupabaseQuery: No data found for single() query, returning null"
-              );
-            }
-            return { ...prev, data: null, isLoading: false, error: null };
-          });
+          setState(prev => ({
+            ...prev,
+            data: null,
+            isLoading: false,
+            error: null,
+          }));
 
           if (onSuccess) {
             onSuccess(null as unknown as T);
           }
           return;
-        } else {
-          // Throw normal error for other errors
-          throw new Error(errorMessage);
         }
+
+        throw new Error(errorMessage);
       }
 
-      // Call setState once and only log in development mode
-      setState((prev) => {
-        if (process.env.NODE_ENV === "development") {
-          console.log("useSupabaseQuery: Data fetched successfully", {
-            dataLength: Array.isArray(data) ? data.length : "single record",
-          });
-        }
-        return { ...prev, data, isLoading: false, error: null };
-      });
+      // Transform data if select function is provided
+      const transformedData = select ? select(data) : (data as T);
 
-      // Call onSuccess callback
+      setState(prev => ({
+        ...prev,
+        data: transformedData,
+        isLoading: false,
+        error: null,
+      }));
+
       if (onSuccess) {
-        onSuccess(data as T);
+        onSuccess(transformedData);
       }
     } catch (error) {
-      const errorObj =
-        error instanceof Error ? error : new Error(String(error));
+      const errorObj = error instanceof Error ? error : new Error(String(error));
 
-      // Call setState once and only log in development mode
-      setState((prev) => {
-        if (process.env.NODE_ENV === "development") {
-          console.error("useSupabaseQuery: Error fetching data", errorObj);
-        }
-        return { ...prev, isLoading: false, error: errorObj };
-      });
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: errorObj,
+      }));
 
-      // Call onError callback
       if (onError) {
         onError(errorObj);
       }
     }
-  }, [enabled, queryFn, onSuccess, onError]);
+  }, [enabled, queryFn, onSuccess, onError, select]);
 
   useEffect(() => {
-    // Only fetch data if enabled is true
     if (enabled) {
       fetchData();
 
-      // Set up refetch interval if specified
       if (refetchInterval) {
         const intervalId = setInterval(fetchData, refetchInterval);
         return () => clearInterval(intervalId);
@@ -136,17 +117,12 @@ export function useSupabaseQuery<T>(
 
   return {
     ...state,
-    refetch: fetchData
+    refetch: fetchData,
   };
 }
 
 /**
  * A custom hook for fetching a single record from Supabase
- * @param table Table name
- * @param column Column to filter on
- * @param value Value to filter by
- * @param options Query options
- * @returns Query state and refetch function
  */
 export function useSupabaseRecord<T>(
   table: string,
@@ -154,16 +130,11 @@ export function useSupabaseRecord<T>(
   value: string | number,
   options: QueryOptions<T> = {}
 ) {
-  return useSupabaseQuery<T>(
-    () => {
-      if (value === "" || value === undefined || value === null) {
-        // Don't make a Supabase query, return empty promise (with limit(0))
-        return supabase.from(table).select().limit(0) as PromiseLike<{data: unknown; error: unknown}>;
-      }
-      return supabase.from(table).select().eq(column, value).single() as PromiseLike<{data: unknown; error: unknown}>;
-    },
-    options
-  );
+  const queryFn = useCallback(() => {
+    return supabase.from(table).select("*").eq(column, value).single();
+  }, [table, column, value]);
+
+  return useSupabaseQuery<T>(queryFn, options);
 }
 
 /**
